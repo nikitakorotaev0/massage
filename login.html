@@ -6,7 +6,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Вход — Дракон Востока</title>
+<title>Вход — Дзен</title>
 
 <link rel="stylesheet" href="css/style.css">
 
@@ -20,57 +20,39 @@
 
 
 
-
 <main class="section">
 
 
 <div class="container">
 
 
+<div class="card auth-card">
+
 
 <h1 class="page-title">
-Вход в личный кабинет
+Вход
 </h1>
 
 
 
 
-<div class="card form-card">
+<input 
+id="email"
+type="email"
+placeholder="Email">
 
-
-
-<form>
-
-
-<label>
-Email
-</label>
 
 
 <input 
-type="email"
-placeholder="example@mail.com">
-
-
-
-
-
-<label>
-Пароль
-</label>
-
-
-<input
+id="password"
 type="password"
-placeholder="Введите пароль">
+placeholder="Пароль">
 
 
 
 
 
-<button 
-class="btn"
-type="submit">
+<button class="btn" onclick="login()">
 
 Войти
 
@@ -78,14 +60,8 @@ type="submit">
 
 
 
-</form>
 
-
-
-
-
-
-<p style="margin-top:20px; text-align:center;">
+<p style="margin-top:20px;">
 
 Нет аккаунта?
 
@@ -93,13 +69,11 @@ type="submit">
 Зарегистрироваться
 </a>
 
-
 </p>
 
 
 
 </div>
-
 
 
 </div>
@@ -109,12 +83,17 @@ type="submit">
 
 
 
-
-
 <div id="footer"></div>
 
 
 
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="js/supabase.js"></script>
+
+<script src="js/auth.js"></script>
 
 <script src="js/components.js"></script>
 

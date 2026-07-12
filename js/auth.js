@@ -1,16 +1,10 @@
-async function register() {
+// =====================================
+// Авторизация пользователя
+// =====================================
 
 
-const firstName =
-document.getElementById("firstName").value;
 
-
-const lastName =
-document.getElementById("lastName").value;
-
-
-const phone =
-document.getElementById("phone").value;
+async function login(){
 
 
 const email =
@@ -22,15 +16,10 @@ document.getElementById("password").value;
 
 
 
-if(
-!firstName ||
-!lastName ||
-!phone ||
-!email ||
-!password
-){
 
-alert("Заполните все поля");
+if(!email || !password){
+
+alert("Введите email и пароль");
 
 return;
 
@@ -40,13 +29,14 @@ return;
 
 
 const {data, error} =
-await supabaseClient.auth.signUp({
+await supabaseClient.auth.signInWithPassword({
 
 email: email,
 
 password: password
 
 });
+
 
 
 
@@ -61,37 +51,23 @@ return;
 
 
 
-
 const user = data.user;
 
 
 
-const {error: profileError} =
+const {data: profile, error: profileError} =
 await supabaseClient
 .from("profiles")
-.insert({
-
-id: user.id,
-
-first_name: firstName,
-
-last_name: lastName,
-
-phone: phone,
-
-email: email,
-
-role: "client"
-
-});
-
+.select("*")
+.eq("id", user.id)
+.single();
 
 
 
 
 if(profileError){
 
-alert(profileError.message);
+alert("Профиль пользователя не найден");
 
 return;
 
@@ -101,24 +77,31 @@ return;
 
 
 
-const {error: clientError} =
-await supabaseClient
-.from("client_profiles")
-.insert({
-
-user_id:user.id
-
-});
+if(profile.role === "admin"){
 
 
+window.location.href="admin/dashboard.html";
 
 
+}
 
-if(clientError){
+else if(profile.role === "employee"){
 
-alert(clientError.message);
 
-return;
+window.location.href="employee/dashboard.html";
+
+
+}
+
+else{
+
+
+window.location.href="client/dashboard.html";
+
+
+}
+
+
 
 }
 
@@ -126,13 +109,14 @@ return;
 
 
 
-alert(
-"Регистрация успешна! Проверьте почту."
-);
+
+async function logout(){
 
 
+await supabaseClient.auth.signOut();
 
-window.location.href="login.html";
+
+window.location.href="../login.html";
 
 
 }
