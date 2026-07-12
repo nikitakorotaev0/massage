@@ -1,0 +1,432 @@
+* {
+  box-sizing: border-box;
+}
+
+
+html,
+body {
+
+  min-height: 100%;
+
+}
+
+
+body {
+
+  margin: 0;
+
+  font-family: Arial, sans-serif;
+
+  background: #f5f0e6;
+
+  color: #3a2c24;
+
+  min-height: 100vh;
+
+  display: flex;
+
+  flex-direction: column;
+
+}
+
+
+
+body > #header {
+
+  flex-shrink: 0;
+
+}
+
+
+
+main {
+
+  flex: 1;
+
+}
+
+
+
+body > #footer {
+
+  flex-shrink: 0;
+
+}
+
+
+
+.container {
+
+  width: min(1100px, 92%);
+
+  margin: 0 auto;
+
+}
+
+
+
+
+
+/* Шапка */
+
+
+.header {
+
+  background: #173f35;
+
+  color: white;
+
+  padding: 16px 0;
+
+}
+
+
+
+.header .container {
+
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  gap: 20px;
+
+  flex-wrap: wrap;
+
+}
+
+
+
+.logo {
+
+  font-size: 24px;
+
+  font-weight: bold;
+
+  color: #c89b3c;
+
+}
+
+
+
+.nav {
+
+  display: flex;
+
+  gap: 16px;
+
+  flex-wrap: wrap;
+
+}
+
+
+
+.nav a {
+
+  color: white;
+
+  text-decoration: none;
+
+}
+
+
+
+.nav a:hover {
+
+  color: #c89b3c;
+
+}
+
+
+
+
+
+/* Главный экран */
+
+
+.hero {
+
+  padding: 80px 0;
+
+  text-align: center;
+
+  color: white;
+
+
+  background:
+
+  linear-gradient(
+
+    rgba(23,63,53,0.9),
+
+    rgba(23,63,53,0.9)
+
+  ),
+
+  url('https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=1400&q=80');
+
+
+  background-size: cover;
+
+  background-position: center;
+
+}
+
+
+
+.hero h1 {
+
+  font-size: 42px;
+
+}
+
+
+
+.hero p {
+
+  font-size: 18px;
+
+}
+
+
+
+
+
+/* Кнопки */
+
+
+.btn {
+
+  display: inline-block;
+
+  padding: 12px 24px;
+
+  background: #c89b3c;
+
+  color: white;
+
+  text-decoration: none;
+
+  border: none;
+
+  border-radius: 8px;
+
+  cursor: pointer;
+
+  font-size: 16px;
+
+}
+
+
+
+.btn:hover {
+
+  background: #b18732;
+
+}
+
+
+
+
+
+/* Разделы */
+
+
+.section {
+
+  padding: 60px 0;
+
+}
+
+
+
+.section h1,
+.section h2 {
+
+  margin-bottom: 25px;
+
+}
+
+
+
+.page-title {
+
+  text-align: center;
+
+}
+
+
+
+
+
+/* Карточки */
+
+
+.cards {
+
+  display: grid;
+
+  grid-template-columns: repeat(
+
+    auto-fit,
+
+    minmax(200px, 1fr)
+
+  );
+
+  gap: 20px;
+
+}
+
+
+
+.card {
+
+  background: white;
+
+  padding: 25px;
+
+  border-radius: 14px;
+
+  box-shadow:
+
+  0 4px 16px rgba(0,0,0,0.08);
+
+}
+
+
+
+
+
+/* Формы */
+
+
+.form-card {
+
+  max-width: 500px;
+
+  margin: 0 auto;
+
+}
+
+
+
+form {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 12px;
+
+}
+
+
+
+form label {
+
+  font-weight: bold;
+
+}
+
+
+
+form input {
+
+  padding: 12px;
+
+  border-radius: 8px;
+
+  border: 1px solid #ccc;
+
+  font-size: 16px;
+
+}
+
+
+
+form input:focus {
+
+  outline: none;
+
+  border-color: #c89b3c;
+
+}
+
+
+
+form button {
+
+  margin-top: 15px;
+
+}
+
+
+
+
+
+/* Подвал */
+
+
+.footer {
+
+  background: #173f35;
+
+  color: white;
+
+  padding: 30px 0;
+
+}
+
+
+
+.footer-content {
+
+  display: flex;
+
+  justify-content: space-between;
+
+  gap: 30px;
+
+  flex-wrap: wrap;
+
+}
+
+
+
+.footer h3 {
+
+  color: #c89b3c;
+
+}
+
+
+
+.footer a {
+
+  color: white;
+
+  text-decoration: none;
+
+}
+
+
+
+.footer a:hover {
+
+  color: #c89b3c;
+
+}
+
+
+
+.footer-bottom {
+
+  margin-top: 25px;
+
+  text-align: center;
+
+  opacity: 0.8;
+
+}
