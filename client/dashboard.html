@@ -6,7 +6,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Личный кабинет — Дракон Востока</title>
+<title>Личный кабинет — Дзен</title>
 
 <link rel="stylesheet" href="../css/style.css">
 
@@ -39,12 +39,12 @@
 
 
 <h2>
-Здравствуйте, Иван!
+Здравствуйте, <span id="userName">загрузка...</span>!
 </h2>
 
 
 <p>
-Добро пожаловать в личный кабинет салона «Дракон Востока».
+Добро пожаловать в личный кабинет салона «Дзен».
 </p>
 
 
@@ -85,6 +85,8 @@
 
 
 
+
+
 <div class="card">
 
 
@@ -105,6 +107,8 @@
 
 
 </div>
+
+
 
 
 
@@ -141,9 +145,14 @@
 
 
 
+
+
 <h2 style="margin-top:40px;">
 Навигация
 </h2>
+
+
+
 
 
 
@@ -169,6 +178,8 @@
 </a>
 
 </div>
+
+
 
 
 
@@ -208,15 +219,61 @@
 
 
 
+
+
 <div id="footer"></div>
 
 
 
 
 
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="../js/supabase.js"></script>
+
+<script src="../js/auth.js"></script>
+
 <script src="../js/components.js"></script>
 
 <script src="../js/script.js"></script>
+
+
+
+
+<script>
+
+
+async function loadProfile(){
+
+
+const profile = await getProfile();
+
+
+
+if(profile){
+
+
+document.getElementById("userName").textContent =
+
+profile.first_name + " " + profile.last_name;
+
+
+}
+
+
+}
+
+
+
+loadProfile();
+
+
+
+</script>
+
 
 
 </body>

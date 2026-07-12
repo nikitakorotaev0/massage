@@ -120,3 +120,43 @@ window.location.href="../login.html";
 
 
 }
+
+async function getProfile(){
+
+
+const {data:{user}} =
+await supabaseClient.auth.getUser();
+
+
+
+if(!user){
+
+return null;
+
+}
+
+
+
+const {data, error} =
+await supabaseClient
+.from("profiles")
+.select("*")
+.eq("id", user.id)
+.single();
+
+
+
+if(error){
+
+console.log(error);
+
+return null;
+
+}
+
+
+
+return data;
+
+
+}
