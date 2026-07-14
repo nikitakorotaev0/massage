@@ -6,7 +6,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Изменение профиля — Дзен</title>
+<title>Медицинская информация — Дзен</title>
 
 <link rel="stylesheet" href="../css/style.css">
 
@@ -26,7 +26,7 @@
 
 
 <h1 class="page-title">
-Изменение данных
+Медицинская информация
 </h1>
 
 
@@ -37,48 +37,20 @@
 
 
 <label>
-Имя
+Противопоказания, операции, травмы, аллергии
 </label>
 
-<input type="text" id="firstName">
+<textarea id="contraindications" rows="5" placeholder="Например: аллергия на эфирные масла, травма спины в 2022 году..."></textarea>
 
 
-<label>
-Фамилия
+<label style="margin-top:15px;">
+Заметки для мастера
 </label>
 
-<input type="text" id="lastName">
+<textarea id="notes" rows="5" placeholder="Пожелания, особенности процедур..."></textarea>
 
 
-<label>
-Отчество
-</label>
-
-<input type="text" id="middleName">
-
-
-<label>
-Дата рождения
-</label>
-
-<input type="date" id="birthDate">
-
-
-<label>
-Email
-</label>
-
-<input type="email" id="email" disabled title="Email привязан к учётной записи и меняется отдельно">
-
-
-<label>
-Телефон
-</label>
-
-<input type="tel" id="phone">
-
-
-<button class="btn" type="button" id="saveProfileBtn">
+<button class="btn" type="button" id="saveMedicalBtn" style="margin-top:15px;">
 Сохранить изменения
 </button>
 
@@ -107,7 +79,7 @@ Email
 <script src="../js/profile.js"></script>
 
 <script>
-initEditProfile();
+initEditMedical();
 </script>
 
 

@@ -228,6 +228,34 @@ body > #footer {
 
 
 
+.btn-danger {
+
+  background: #b02a2a;
+
+}
+
+
+
+.btn-danger:hover {
+
+  background: #8f2222;
+
+}
+
+
+
+.danger-zone {
+
+  border: 1px solid #b02a2a;
+
+  border-radius: 10px;
+
+  padding: 20px;
+
+}
+
+
+
 
 
 /* Разделы */
@@ -416,6 +444,128 @@ form button {
 .footer a:hover {
 
   color: #c89b3c;
+
+}
+
+
+
+form select {
+
+  padding: 12px;
+
+  border-radius: 8px;
+
+  border: 1px solid #ccc;
+
+  font-size: 16px;
+
+  background: white;
+
+}
+
+
+
+form textarea {
+
+  padding: 12px;
+
+  border-radius: 8px;
+
+  border: 1px solid #ccc;
+
+  font-size: 16px;
+
+  font-family: inherit;
+
+  resize: vertical;
+
+}
+
+
+
+form input:disabled {
+
+  background: #f0f0f0;
+
+  color: #888;
+
+}
+
+
+
+form label {
+
+  font-weight: 600;
+
+  margin-top: 4px;
+
+}
+
+
+
+.slots-container {
+
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 10px;
+
+  margin-top: 10px;
+
+}
+
+
+
+.slot-btn {
+
+  padding: 10px 16px;
+
+  border-radius: 8px;
+
+  border: 1px solid #c89b3c;
+
+  background: white;
+
+  color: #173f35;
+
+  font-size: 15px;
+
+  cursor: pointer;
+
+}
+
+
+
+.slot-btn:hover {
+
+  background: #f3e7cc;
+
+}
+
+
+
+.slot-btn-active {
+
+  background: #c89b3c;
+
+  color: white;
+
+}
+
+
+
+.booking-message {
+
+  margin-top: 15px;
+
+  padding: 12px;
+
+  border-radius: 8px;
+
+  background: #f5f5f5;
+
+  font-weight: 600;
 
 }
 

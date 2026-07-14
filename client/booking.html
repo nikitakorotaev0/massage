@@ -6,7 +6,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Запись на массаж — Дракон Востока</title>
+<title>Запись на массаж — Дзен</title>
 
 <link rel="stylesheet" href="../css/style.css">
 
@@ -19,14 +19,10 @@
 <div id="header"></div>
 
 
-
-
-
 <main class="section">
 
 
 <div class="container">
-
 
 
 <h1 class="page-title">
@@ -34,254 +30,78 @@
 </h1>
 
 
-
-
-
-
 <div class="card form-card">
 
 
-<form>
-
-
-
+<form onsubmit="return false;">
 
 
 <h2>
 Кого записываем?
 </h2>
 
-
-
-
 <label>
-
-<input 
-type="radio"
-name="person"
-checked>
-
+<input type="radio" id="personSelf" name="person" checked>
 Меня
-
 </label>
 
-
-
-
-
 <label>
-
-<input 
-type="radio"
-name="person">
-
+<input type="radio" id="personOther" name="person">
 Другого человека
-
 </label>
 
 
+<div id="otherPersonFields" style="display:none; flex-direction:column; gap:10px; margin-top:15px;">
 
+<label>ФИО посетителя</label>
+<input type="text" id="otherName" placeholder="Введите ФИО">
 
+<label>Телефон посетителя</label>
+<input type="tel" id="otherPhone" placeholder="+7 (900) 000-00-00">
 
-
-<h2 style="margin-top:30px;">
-Данные посетителя
-</h2>
-
-
-
-
-
-
-<label>
-ФИО
-</label>
-
-
-<input
-type="text"
-placeholder="Введите ФИО">
-
-
-
-
-
-<label>
-Телефон
-</label>
-
-
-<input
-type="tel"
-placeholder="+7 (900) 000-00-00">
-
-
-
-
-
-<label>
-Дата рождения
-</label>
-
-
-<input
-type="date">
-
-
-
-
-
+</div>
 
 
 <h2 style="margin-top:30px;">
 Выберите услугу
 </h2>
 
-
-
-
-
-<select>
-
-<option>
-Классический массаж
-</option>
-
-<option>
-Восточный массаж
-</option>
-
-<option>
-Массаж спины
-</option>
-
-<option>
-Массаж лица
-</option>
-
-
+<select id="serviceSelect">
+<option>Загрузка...</option>
 </select>
-
-
-
-
-
-
 
 
 <h2 style="margin-top:30px;">
 Выберите мастера
 </h2>
 
-
-
-
-
-<select>
-
-<option>
-Анна
-</option>
-
-<option>
-Иван
-</option>
-
+<select id="employeeSelect">
+<option>Загрузка...</option>
 </select>
-
-
-
-
-
-
-
 
 
 <h2 style="margin-top:30px;">
 Дата посещения
 </h2>
 
-
-
-
-<input
-type="date">
-
-
-
-
-
+<input type="date" id="dateInput">
 
 
 <h2 style="margin-top:30px;">
-Время
+Свободное время
 </h2>
 
+<div id="slotsContainer" class="slots-container">
+<p>Выберите услугу, мастера и дату</p>
+</div>
 
 
+<div id="bookingMessage" class="booking-message" style="display:none;"></div>
 
 
-<select>
-
-
-<option>
-10:00
-</option>
-
-
-<option>
-11:30
-</option>
-
-
-<option>
-14:00
-</option>
-
-
-<option>
-16:00
-</option>
-
-
-<option>
-18:00
-</option>
-
-
-</select>
-
-
-
-
-
-
-
-<h2 style="margin-top:30px;">
-Промокод
-</h2>
-
-
-
-
-<input
-type="text"
-placeholder="Введите промокод">
-
-
-
-
-
-
-
-<button class="btn" type="submit">
-
+<button class="btn" type="button" id="submitBookingBtn" style="margin-top:20px;">
 Подтвердить запись
-
 </button>
-
-
-
 
 
 </form>
@@ -290,26 +110,22 @@ placeholder="Введите промокод">
 </div>
 
 
-
-
 </div>
 
 
 </main>
 
 
-
-
-
 <div id="footer"></div>
 
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-
-
+<script src="../js/supabase.js"></script>
+<script src="../js/auth.js"></script>
 <script src="../js/components.js"></script>
-
 <script src="../js/script.js"></script>
+<script src="../js/booking.js"></script>
 
 
 </body>

@@ -18,6 +18,7 @@ if (
 
 
 
+
 const header = document.getElementById("header");
 
 
@@ -35,7 +36,7 @@ header.innerHTML = `
 
 <div class="logo">
 
-Дракон Востока
+Дзен
 
 </div>
 
@@ -101,6 +102,7 @@ header.innerHTML = `
 
 
 
+
 const footer = document.getElementById("footer");
 
 
@@ -124,16 +126,17 @@ footer.innerHTML = `
 <div>
 
 <h3>
-Дракон Востока
+Дзен
 </h3>
 
 
 <p>
-Массажный салон восточных практик.
+Салон массажа для восстановления баланса тела и разума.
 </p>
 
 
 </div>
+
 
 
 
@@ -163,13 +166,13 @@ footer.innerHTML = `
 
 
 
+
 <div>
 
 
 <h3>
 Навигация
 </h3>
-
 
 
 <p>
@@ -205,11 +208,10 @@ footer.innerHTML = `
 
 
 
-
 <div class="footer-bottom">
 
 
-© 2026 Дракон Востока
+© 2026 Дзен
 
 
 </div>

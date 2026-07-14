@@ -6,7 +6,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Клиенты — Админ-панель</title>
+<title>Пользователи — Админ-панель — Дзен</title>
 
 <link rel="stylesheet" href="../css/style.css">
 
@@ -23,103 +23,26 @@
 
 
 <h1 class="page-title">
-Клиенты
+Пользователи
 </h1>
-
 
 
 <div class="card">
 
 <h2>
-Поиск клиента
+Поиск
 </h2>
 
-
-<input 
-type="text"
-placeholder="Имя, телефон или email">
-
-
-<button class="btn" style="margin-top:15px;">
-Найти
-</button>
-
+<form onsubmit="return false;">
+<input type="text" id="searchInput" placeholder="Имя, фамилия, email или телефон">
+</form>
 
 </div>
 
 
-
-
-<div class="card" style="margin-top:30px;">
-
-
-<h2>
-Иван Иванов
-</h2>
-
-
-<p>
-Телефон:
-+7 (900) 111-11-11
-</p>
-
-
-<p>
-Email:
-ivan@mail.com
-</p>
-
-
-<p>
-Посещений:
-12
-</p>
-
-
-<p>
-Статус:
-Активен
-</p>
-
-
-<button class="btn">
-Открыть профиль
-</button>
-
-
+<div id="usersContainer" style="margin-top:30px;">
+<p>Загрузка...</p>
 </div>
-
-
-
-
-<div class="card" style="margin-top:20px;">
-
-
-<h2>
-Мария Петрова
-</h2>
-
-
-<p>
-Телефон:
-+7 (900) 222-22-22
-</p>
-
-
-<p>
-Статус:
-Активен
-</p>
-
-
-<button class="btn">
-Открыть профиль
-</button>
-
-
-</div>
-
-
 
 
 </div>
@@ -130,9 +53,17 @@ ivan@mail.com
 <div id="footer"></div>
 
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="../js/supabase.js"></script>
+<script src="../js/auth.js"></script>
 <script src="../js/components.js"></script>
 <script src="../js/script.js"></script>
+<script src="../js/admin.js"></script>
 
+<script>
+initAdminUsers();
+</script>
 
 </body>
 
