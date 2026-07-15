@@ -6,7 +6,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Кабинет сотрудника — Дракон Востока</title>
+<title>Кабинет сотрудника — Дзен</title>
 
 <link rel="stylesheet" href="../css/style.css">
 
@@ -19,129 +19,60 @@
 <div id="header"></div>
 
 
-
-
 <main class="section">
 
 
 <div class="container">
 
 
-
 <h1 class="page-title">
 Кабинет сотрудника
 </h1>
 
+<p style="margin-bottom:20px;">
+<button class="btn" type="button" onclick="logout()">Выйти</button>
+</p>
 
 
+<p style="margin-bottom:20px;">
+<a class="btn" href="appointments.html">Все записи</a>
+<a class="btn" href="clients.html" style="margin-left:10px;">Клиенты</a>
+<a class="btn" href="comments.html" style="margin-left:10px;">Комментарии</a>
+</p>
 
 
 <div class="card">
 
-
 <h2>
-Сегодня, 12 июля 2026
+Смена
 </h2>
 
+<p id="todayScheduleInfo">Загрузка...</p>
 
-<p>
-Ваше расписание на сегодняшний день.
-</p>
+<p id="shiftStatus" style="margin-top:10px; font-weight:600;">Загрузка...</p>
 
+<button class="btn" type="button" id="startShiftBtn" style="margin-top:10px;">
+Начать смену
+</button>
+
+<button class="btn btn-danger" type="button" id="endShiftBtn" style="margin-top:10px; display:none;">
+Закончить смену
+</button>
 
 </div>
 
 
+<div class="card" style="margin-top:30px;">
 
-
-
-
-
-<h2 style="margin-top:30px;">
+<h2>
 Ближайшие записи
 </h2>
 
-
-
-
-
-
-<div class="card">
-
-
-<h3>
-14:00 — Иван Иванов
-</h3>
-
-
 <p>
-Услуга:
-Классический массаж
+Список записей на сегодня появится здесь на следующем этапе разработки.
 </p>
-
-
-<p>
-Телефон:
-+7 (900) 111-11-11
-</p>
-
-
-<p>
-Статус:
-Ожидает посещения
-</p>
-
-
-
-<button class="btn">
-
-Начать сеанс
-
-</button>
-
 
 </div>
-
-
-
-
-
-
-
-
-<div class="card" style="margin-top:20px;">
-
-
-<h3>
-16:30 — Мария Петрова
-</h3>
-
-
-<p>
-Услуга:
-Массаж спины
-</p>
-
-
-<p>
-Статус:
-Ожидает посещения
-</p>
-
-
-<button class="btn">
-
-Начать сеанс
-
-</button>
-
-
-</div>
-
-
-
-
-
 
 
 </div>
@@ -150,18 +81,22 @@
 </main>
 
 
-
-
-
 <div id="footer"></div>
 
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-
-
+<script src="../js/supabase.js"></script>
+<script src="../js/auth.js"></script>
 <script src="../js/components.js"></script>
+<script src="../js/ui.js"></script>
 
 <script src="../js/script.js"></script>
+<script src="../js/shift.js"></script>
+
+<script>
+initEmployeeShift();
+</script>
 
 
 </body>

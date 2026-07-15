@@ -6,7 +6,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Статистика — Админ-панель</title>
+<title>Статистика — Админ-панель — Дзен</title>
 
 <link rel="stylesheet" href="../css/style.css">
 
@@ -19,167 +19,54 @@
 <div id="header"></div>
 
 
-
-
-
 <main class="section">
 
 
 <div class="container">
 
-
-
 <h1 class="page-title">
 Статистика
 </h1>
 
-
-
-
-
+<p style="margin-bottom:20px;">
+<a class="btn" href="dashboard.html">Панель</a>
+</p>
 
 
 <div class="cards">
 
-
+<div class="card">
+<h2>Всего клиентов</h2>
+<p id="statClients">—</p>
+</div>
 
 <div class="card">
-
-
-<h2>
-Всего клиентов
-</h2>
-
-
-<p>
-356
-</p>
-
-
+<h2>Записей в этом месяце</h2>
+<p id="statAppointments">—</p>
 </div>
-
-
-
-
-
 
 <div class="card">
-
-
-<h2>
-Записей за месяц
-</h2>
-
-
-<p>
-148
-</p>
-
-
+<h2>Доход в этом месяце</h2>
+<p id="statRevenue">—</p>
 </div>
 
-
-
-
-
-
-
-<div class="card">
-
-
-<h2>
-Доход
-</h2>
-
-
-<p>
-370 000 ₽
-</p>
-
-
 </div>
-
-
-
-
-
-</div>
-
-
-
-
-
 
 
 <div class="card" style="margin-top:30px;">
-
-
-
-<h2>
-Популярные услуги
-</h2>
-
-
-
-<p>
-1 место:
-Классический массаж
-</p>
-
-
-
-<p>
-2 место:
-Массаж спины
-</p>
-
-
-
-<p>
-3 место:
-Восточный массаж
-</p>
-
-
-
+<h2>Популярные услуги</h2>
+<div id="popularServicesContainer">
+<p>Загрузка...</p>
 </div>
-
-
-
-
-
+</div>
 
 
 <div class="card" style="margin-top:30px;">
-
-
-
-<h2>
-Активность сотрудников
-</h2>
-
-
-
-<p>
-Анна:
-42 сеанса
-</p>
-
-
-
-<p>
-Иван:
-36 сеансов
-</p>
-
-
-
+<h2>Активность сотрудников</h2>
+<div id="employeeActivityContainer">
+<p>Загрузка...</p>
 </div>
-
-
-
-
-
+</div>
 
 
 </div>
@@ -188,18 +75,22 @@
 </main>
 
 
-
-
-
 <div id="footer"></div>
 
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-
-
+<script src="../js/supabase.js"></script>
+<script src="../js/auth.js"></script>
 <script src="../js/components.js"></script>
+<script src="../js/ui.js"></script>
 
 <script src="../js/script.js"></script>
+<script src="../js/admin-statistics.js"></script>
+
+<script>
+initAdminStatistics();
+</script>
 
 
 </body>

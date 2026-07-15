@@ -81,7 +81,7 @@ async function saveProfile(){
   const phone = document.getElementById("phone").value.trim();
 
   if(!firstName || !lastName){
-    alert("Имя и фамилия обязательны");
+    showToast("Имя и фамилия обязательны", "error");
     return;
   }
 
@@ -106,10 +106,11 @@ async function saveProfile(){
   btn.textContent = "Сохранить изменения";
 
   if(error){
-    alert("Не удалось сохранить изменения: " + error.message);
+    showToast("Не удалось сохранить изменения: " + error.message, "error");
     return;
   }
 
+  showToast("Изменения сохранены", "success");
   window.location.href = "profile.html";
 }
 
@@ -170,10 +171,11 @@ async function saveMedical(){
   btn.textContent = "Сохранить изменения";
 
   if(error){
-    alert("Не удалось сохранить изменения: " + error.message);
+    showToast("Не удалось сохранить изменения: " + error.message, "error");
     return;
   }
 
+  showToast("Изменения сохранены", "success");
   window.location.href = "profile.html";
 }
 
@@ -182,7 +184,7 @@ async function saveMedical(){
 
 async function deleteMyAccount(){
 
-  const firstConfirm = confirm(
+  const firstConfirm = await showConfirm(
     "Вы уверены, что хотите удалить аккаунт? " +
     "Доступ к аккаунту будет закрыт немедленно, а запрос на " +
     "удаление данных отправлен администратору."
@@ -192,7 +194,7 @@ async function deleteMyAccount(){
     return;
   }
 
-  const secondConfirm = confirm(
+  const secondConfirm = await showConfirm(
     "Это последнее предупреждение. После подтверждения вы не сможете " +
     "войти в аккаунт, пока администратор не обработает заявку. Продолжить?"
   );
@@ -218,7 +220,7 @@ async function deleteMyAccount(){
     .eq("id", user.id);
 
   if(error){
-    alert("Не удалось отправить заявку на удаление: " + error.message);
+    showToast("Не удалось отправить заявку на удаление: " + error.message, "error");
     btn.disabled = false;
     btn.textContent = "Удалить аккаунт";
     return;
@@ -226,9 +228,12 @@ async function deleteMyAccount(){
 
   await supabaseClient.auth.signOut();
 
-  alert(
-    "Доступ к аккаунту закрыт. Заявка на удаление отправлена администратору. " +
-    "Если решите передумать — обратитесь в салон."
+  showToast(
+    "Доступ к аккаунту закрыт. Заявка на удаление отправлена администратору.",
+    "success"
   );
-  window.location.href = "../index.html";
+
+  setTimeout(() => {
+    window.location.href = "../index.html";
+  }, 1500);
 }

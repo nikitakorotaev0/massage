@@ -6,7 +6,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Клиенты — Дракон Востока</title>
+<title>Клиенты — Дзен</title>
 
 <link rel="stylesheet" href="../css/style.css">
 
@@ -19,195 +19,41 @@
 <div id="header"></div>
 
 
-
-
-
 <main class="section">
 
 
 <div class="container">
 
 
-
 <h1 class="page-title">
 Клиенты
 </h1>
 
-
-
-
-
+<p style="margin-bottom:20px;">
+<a class="btn" href="dashboard.html">Кабинет</a>
+<a class="btn" href="appointments.html" style="margin-left:10px;">Все записи</a>
+<a class="btn" href="comments.html" style="margin-left:10px;">Комментарии</a>
+</p>
 
 
 <div class="card">
 
+<h2>Поиск клиента</h2>
 
-<h2>
-Поиск клиента
-</h2>
+<form onsubmit="return false;">
+<input type="text" id="clientSearchInput" placeholder="Введите имя, фамилию или телефон">
+</form>
 
-
-
-<input 
-type="text"
-placeholder="Введите имя или телефон">
-
-
-
-<button class="btn" style="margin-top:15px;">
-
+<button class="btn" type="button" id="clientSearchBtn" style="margin-top:15px;">
 Найти
-
 </button>
 
-
-
-</div>
-
-
-
-
-
-
-
-
-<div class="card" style="margin-top:30px;">
-
-
-
-<h2>
-Иван Иванов
-</h2>
-
-
-
-<p>
-<strong>Телефон:</strong><br>
-+7 (900) 111-11-11
-</p>
-
-
-
-<p>
-<strong>Дата рождения:</strong><br>
-01.01.2000
-</p>
-
-
+<div id="clientResultsContainer" style="margin-top:15px;"></div>
 
 </div>
 
 
-
-
-
-
-
-<div class="card" style="margin-top:20px;">
-
-
-
-<h2>
-Медицинская информация
-</h2>
-
-
-
-<h3>
-Противопоказания, операции, травмы, аллергии
-</h3>
-
-
-
-<p>
-
-Аллергия на некоторые эфирные масла.
-Старая травма правого плеча.
-
-</p>
-
-
-
-
-</div>
-
-
-
-
-
-
-
-
-<div class="card" style="margin-top:20px;">
-
-
-
-<h2>
-История посещений
-</h2>
-
-
-
-<p>
-20 июня 2026 — Массаж спины
-</p>
-
-
-<p>
-5 июня 2026 — Классический массаж
-</p>
-
-
-
-
-</div>
-
-
-
-
-
-
-
-<div class="card" style="margin-top:20px;">
-
-
-
-<h2>
-Внутренняя заметка
-</h2>
-
-
-
-<p>
-Видят только сотрудники и администрация.
-</p>
-
-
-
-
-<textarea
-rows="4"
-placeholder="Добавить заметку">
-</textarea>
-
-
-
-
-<button class="btn" style="margin-top:15px;">
-
-Сохранить
-
-</button>
-
-
-
-
-</div>
-
-
-
-
-
+<div id="clientDetailsContainer"></div>
 
 
 </div>
@@ -216,18 +62,22 @@ placeholder="Добавить заметку">
 </main>
 
 
-
-
-
 <div id="footer"></div>
 
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-
-
+<script src="../js/supabase.js"></script>
+<script src="../js/auth.js"></script>
 <script src="../js/components.js"></script>
+<script src="../js/ui.js"></script>
 
 <script src="../js/script.js"></script>
+<script src="../js/employee.js"></script>
+
+<script>
+initEmployeeClients();
+</script>
 
 
 </body>

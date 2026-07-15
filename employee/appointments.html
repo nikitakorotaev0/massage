@@ -6,7 +6,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Записи — Дракон Востока</title>
+<title>Записи — Дзен</title>
 
 <link rel="stylesheet" href="../css/style.css">
 
@@ -19,178 +19,37 @@
 <div id="header"></div>
 
 
-
-
-
 <main class="section">
 
 
 <div class="container">
 
 
-
 <h1 class="page-title">
 Все записи
 </h1>
 
-
-
-
-
+<p style="margin-bottom:20px;">
+<a class="btn" href="dashboard.html">Кабинет</a>
+<a class="btn" href="clients.html" style="margin-left:10px;">Клиенты</a>
+<a class="btn" href="comments.html" style="margin-left:10px;">Комментарии</a>
+</p>
 
 
 <div class="card">
 
+<h2>Фильтр</h2>
 
-<h2>
-Фильтр
-</h2>
-
-
-<div class="cards">
-
-
-<div class="card">
-
-<a class="btn">
-Сегодня
-</a>
+<button class="btn" type="button" id="filterToday">Сегодня</button>
+<button class="btn" type="button" id="filterTomorrow" style="margin-left:10px;">Завтра</button>
+<button class="btn" type="button" id="filterWeek" style="margin-left:10px;">Неделя</button>
 
 </div>
 
 
-
-<div class="card">
-
-<a class="btn">
-Завтра
-</a>
-
+<div id="appointmentsListContainer" style="margin-top:30px;">
+<p>Загрузка...</p>
 </div>
-
-
-
-<div class="card">
-
-<a class="btn">
-Неделя
-</a>
-
-</div>
-
-
-
-</div>
-
-
-</div>
-
-
-
-
-
-
-
-<div class="card" style="margin-top:30px;">
-
-
-
-<h2>
-12 июля 2026 — 14:00
-</h2>
-
-
-
-<p>
-<strong>Клиент:</strong><br>
-Иван Иванов
-</p>
-
-
-
-
-<p>
-<strong>Телефон:</strong><br>
-+7 (900) 111-11-11
-</p>
-
-
-
-
-<p>
-<strong>Услуга:</strong><br>
-Классический массаж
-</p>
-
-
-
-
-<p>
-<strong>Статус:</strong><br>
-Ожидает посещения
-</p>
-
-
-
-
-
-<button class="btn">
-
-Начать сеанс
-
-</button>
-
-
-
-</div>
-
-
-
-
-
-
-
-<div class="card" style="margin-top:20px;">
-
-
-
-<h2>
-12 июля 2026 — 16:30
-</h2>
-
-
-
-<p>
-<strong>Клиент:</strong><br>
-Мария Петрова
-</p>
-
-
-
-
-<p>
-<strong>Услуга:</strong><br>
-Массаж спины
-</p>
-
-
-
-
-<p>
-<strong>Статус:</strong><br>
-Завершено
-</p>
-
-
-
-
-
-</div>
-
-
-
-
-
 
 
 </div>
@@ -199,18 +58,22 @@
 </main>
 
 
-
-
-
 <div id="footer"></div>
 
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-
-
+<script src="../js/supabase.js"></script>
+<script src="../js/auth.js"></script>
 <script src="../js/components.js"></script>
+<script src="../js/ui.js"></script>
 
 <script src="../js/script.js"></script>
+<script src="../js/employee.js"></script>
+
+<script>
+initEmployeeAppointments();
+</script>
 
 
 </body>

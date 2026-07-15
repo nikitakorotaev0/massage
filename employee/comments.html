@@ -6,7 +6,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Комментарии — Дракон Востока</title>
+<title>Комментарии — Дзен</title>
 
 <link rel="stylesheet" href="../css/style.css">
 
@@ -19,166 +19,73 @@
 <div id="header"></div>
 
 
-
-
-
 <main class="section">
 
 
 <div class="container">
 
 
-
 <h1 class="page-title">
 Внутренние комментарии
 </h1>
 
-
-
-
-
+<p style="margin-bottom:20px;">
+<a class="btn" href="dashboard.html">Кабинет</a>
+<a class="btn" href="clients.html" style="margin-left:10px;">Клиенты</a>
+</p>
 
 
 <div class="card">
-
 
 <h2>
 Добавить комментарий
 </h2>
 
-
-
-
 <label>
 Клиент
 </label>
 
+<form onsubmit="return false;">
+<input type="text" id="commentClientSearchInput" placeholder="Введите имя, фамилию или телефон">
+</form>
+
+<button class="btn" type="button" id="commentClientSearchBtn" style="margin-top:10px;">
+Найти
+</button>
+
+<div id="commentClientResults"></div>
 
 
-<input
-type="text"
-placeholder="Введите имя клиента">
+<div id="commentFormBox" style="display:none; margin-top:20px;">
 
+<p>
+Клиент: <strong id="commentFormClientName"></strong>
+</p>
 
-
-
-
-
-<label style="margin-top:15px;">
+<form onsubmit="return false;">
+<label style="margin-top:10px;">
 Комментарий
 </label>
 
+<textarea id="commentText" rows="5" placeholder="Напишите заметку для сотрудников"></textarea>
+</form>
 
-
-<textarea
-rows="5"
-placeholder="Напишите заметку для сотрудников">
-</textarea>
-
-
-
-
-
-<button class="btn" style="margin-top:15px;">
-
+<button class="btn" type="button" id="saveCommentBtn" style="margin-top:15px;">
 Сохранить
-
 </button>
 
-
+</div>
 
 </div>
 
 
-
-
-
-
-
-
-<div class="card" style="margin-top:30px;">
-
-
-
-<h2>
-Иван Иванов
+<h2 style="margin-top:30px;">
+Последние комментарии
 </h2>
 
-
-
-
-<p>
-<strong>Комментарий:</strong>
-</p>
-
-
-
-<p>
-Предпочитает массаж средней интенсивности.
-Не использовать слишком горячие масла.
-</p>
-
-
-
-<p>
-Добавил:
-Анна
-</p>
-
-
-
-<p>
-Дата:
-10 июля 2026
-</p>
-
-
-
+<div id="commentsFeedContainer" style="margin-top:15px;">
+<p>Загрузка...</p>
 </div>
-
-
-
-
-
-
-
-
-<div class="card" style="margin-top:20px;">
-
-
-
-<h2>
-Мария Петрова
-</h2>
-
-
-
-<p>
-<strong>Комментарий:</strong>
-</p>
-
-
-
-<p>
-Боится сильного давления.
-Проверять ощущения во время процедуры.
-</p>
-
-
-
-<p>
-Добавил:
-Иван
-</p>
-
-
-
-
-</div>
-
-
-
-
 
 
 </div>
@@ -187,18 +94,22 @@ placeholder="Напишите заметку для сотрудников">
 </main>
 
 
-
-
-
 <div id="footer"></div>
 
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-
-
+<script src="../js/supabase.js"></script>
+<script src="../js/auth.js"></script>
 <script src="../js/components.js"></script>
+<script src="../js/ui.js"></script>
 
 <script src="../js/script.js"></script>
+<script src="../js/employee.js"></script>
+
+<script>
+initEmployeeComments();
+</script>
 
 
 </body>

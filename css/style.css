@@ -580,3 +580,195 @@ form label {
   opacity: 0.8;
 
 }
+
+/* Тосты и модальное подтверждение (js/ui.js) */
+
+.toast-container {
+
+  position: fixed;
+
+  top: 20px;
+
+  right: 20px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 10px;
+
+  z-index: 1000;
+
+  max-width: 340px;
+
+}
+
+
+.toast {
+
+  padding: 14px 18px;
+
+  border-radius: 8px;
+
+  color: white;
+
+  font-size: 15px;
+
+  opacity: 0;
+
+  transform: translateX(20px);
+
+  transition: opacity 0.3s ease, transform 0.3s ease;
+
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+
+}
+
+
+.toast-visible {
+
+  opacity: 1;
+
+  transform: translateX(0);
+
+}
+
+
+.toast-info {
+
+  background: #173f35;
+
+}
+
+
+.toast-success {
+
+  background: #2f7d4f;
+
+}
+
+
+.toast-error {
+
+  background: #b02a2a;
+
+}
+
+
+.confirm-overlay {
+
+  position: fixed;
+
+  top: 0;
+
+  left: 0;
+
+  right: 0;
+
+  bottom: 0;
+
+  background: rgba(0,0,0,0.5);
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  z-index: 1001;
+
+  opacity: 0;
+
+  transition: opacity 0.2s ease;
+
+}
+
+
+.confirm-visible {
+
+  opacity: 1;
+
+}
+
+
+.confirm-box {
+
+  background: white;
+
+  border-radius: 10px;
+
+  padding: 25px;
+
+  max-width: 420px;
+
+  width: 90%;
+
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+
+}
+
+
+.confirm-message {
+
+  margin-bottom: 20px;
+
+  color: #173f35;
+
+  font-size: 16px;
+
+  line-height: 1.4;
+
+}
+
+
+.confirm-actions {
+
+  display: flex;
+
+  gap: 12px;
+
+  justify-content: flex-end;
+
+}
+
+
+/* Расписание сотрудников (admin/schedule.html) */
+
+.schedule-day-row {
+
+  margin-bottom: 10px;
+
+}
+
+
+.schedule-day-actions {
+
+  display: flex;
+
+  gap: 10px;
+
+  flex-wrap: wrap;
+
+  align-items: center;
+
+}
+
+
+.schedule-day-actions select {
+
+  padding: 8px;
+
+  border-radius: 8px;
+
+  border: 1px solid #ccc;
+
+}
+
+
+/* Активный фильтр (employee/appointments.html) */
+
+.btn-active-filter {
+
+  background: #173f35;
+
+}

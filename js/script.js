@@ -1,4 +1,4 @@
-console.log("Сайт Дракон Востока загружен");
+console.log("Сайт Дзен загружен");
 
 
 const phoneInput = document.getElementById("phone");

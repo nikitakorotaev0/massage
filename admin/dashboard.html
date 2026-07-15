@@ -6,7 +6,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Админ-панель — Дракон Востока</title>
+<title>Панель администратора — Дзен</title>
 
 <link rel="stylesheet" href="../css/style.css">
 
@@ -19,229 +19,85 @@
 <div id="header"></div>
 
 
-
-
-
 <main class="section">
 
 
 <div class="container">
 
 
-
 <h1 class="page-title">
 Панель администратора
 </h1>
 
-
-
-
-
+<p style="margin-bottom:20px;">
+<button class="btn" type="button" onclick="logout()">Выйти</button>
+</p>
 
 
 <div class="cards">
 
-
+<div class="card">
+<h2>Записей сегодня</h2>
+<p id="dashTodayAppointments">—</p>
+</div>
 
 <div class="card">
-
-<h2>
-Записи сегодня
-</h2>
-
-
-<p>
-12
-</p>
-
-
+<h2>Клиенты</h2>
+<p id="dashClients">—</p>
 </div>
-
-
-
-
 
 <div class="card">
-
-<h2>
-Клиенты
-</h2>
-
-
-<p>
-356
-</p>
-
-
+<h2>Сотрудники</h2>
+<p id="dashEmployees">—</p>
 </div>
 
-
-
-
-
-<div class="card">
-
-<h2>
-Сотрудники
-</h2>
-
-
-<p>
-5
-</p>
-
-
 </div>
-
-
-
-
-</div>
-
-
-
-
-
 
 
 <h2 style="margin-top:40px;">
-Ближайшие записи
+Записи на сегодня
 </h2>
 
-
-
-
-
-
-<div class="card">
-
-
-<h3>
-14:00 — Иван Иванов
-</h3>
-
-
-<p>
-Услуга:
-Массаж спины
-</p>
-
-
-<p>
-Мастер:
-Анна
-</p>
-
-
-<p>
-Статус:
-Подтверждено
-</p>
-
-
+<div id="dashTodayList" style="margin-top:15px;">
+<p>Загрузка...</p>
 </div>
-
-
-
-
-
-
-
-<div class="card" style="margin-top:20px;">
-
-
-<h3>
-15:30 — Мария Петрова
-</h3>
-
-
-<p>
-Услуга:
-Классический массаж
-</p>
-
-
-<p>
-Мастер:
-Иван
-</p>
-
-
-<p>
-Статус:
-Ожидает
-</p>
-
-
-</div>
-
-
-
-
-
 
 
 <h2 style="margin-top:40px;">
-Быстрые действия
+Разделы
 </h2>
 
-
-
-
-
-<div class="cards">
-
-
+<div class="cards" style="margin-top:15px;">
 
 <div class="card">
-
-<a class="btn">
-
-Создать запись
-
-</a>
-
-
+<a class="btn" href="schedule.html">Расписание</a>
 </div>
-
-
-
-
 
 <div class="card">
-
-<a class="btn">
-
-Добавить сотрудника
-
-</a>
-
-
+<a class="btn" href="employees.html">Сотрудники</a>
 </div>
-
-
-
-
 
 <div class="card">
-
-<a class="btn">
-
-Добавить услугу
-
-</a>
-
-
+<a class="btn" href="services.html">Услуги</a>
 </div>
 
-
-
+<div class="card">
+<a class="btn" href="clients.html">Пользователи</a>
 </div>
 
+<div class="card">
+<a class="btn" href="statistics.html">Статистика</a>
+</div>
 
+<div class="card">
+<a class="btn" href="promo.html">Промокоды</a>
+</div>
 
+<div class="card">
+<a class="btn" href="settings.html">Настройки</a>
+</div>
 
-
+</div>
 
 
 </div>
@@ -250,18 +106,22 @@
 </main>
 
 
-
-
-
 <div id="footer"></div>
 
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-
-
+<script src="../js/supabase.js"></script>
+<script src="../js/auth.js"></script>
 <script src="../js/components.js"></script>
+<script src="../js/ui.js"></script>
 
 <script src="../js/script.js"></script>
+<script src="../js/admin.js"></script>
+
+<script>
+initAdminDashboard();
+</script>
 
 
 </body>

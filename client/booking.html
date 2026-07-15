@@ -72,19 +72,12 @@
 
 
 <h2 style="margin-top:30px;">
-Выберите мастера
-</h2>
-
-<select id="employeeSelect">
-<option>Загрузка...</option>
-</select>
-
-
-<h2 style="margin-top:30px;">
 Дата посещения
 </h2>
 
 <input type="date" id="dateInput">
+
+<p id="masterInfo" class="booking-message" style="display:none;"></p>
 
 
 <h2 style="margin-top:30px;">
@@ -92,7 +85,7 @@
 </h2>
 
 <div id="slotsContainer" class="slots-container">
-<p>Выберите услугу, мастера и дату</p>
+<p>Выберите услугу и дату</p>
 </div>
 
 
@@ -124,6 +117,8 @@
 <script src="../js/supabase.js"></script>
 <script src="../js/auth.js"></script>
 <script src="../js/components.js"></script>
+<script src="../js/ui.js"></script>
+
 <script src="../js/script.js"></script>
 <script src="../js/booking.js"></script>
 

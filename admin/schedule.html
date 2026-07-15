@@ -6,7 +6,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Расписание — Админ-панель</title>
+<title>Расписание сотрудников — Админ-панель — Дзен</title>
 
 <link rel="stylesheet" href="../css/style.css">
 
@@ -24,95 +24,60 @@
 
 
 <h1 class="page-title">
-Расписание
+Расписание сотрудников
 </h1>
 
-
-
+<p style="margin-bottom:20px;">
+<a class="btn" href="dashboard.html">Панель</a>
+<a class="btn" href="clients.html" style="margin-left:10px;">Пользователи</a>
+</p>
 
 
 <div class="card">
 
-
 <h2>
-Рабочие дни
+Назначить мастера на день
 </h2>
 
+<form onsubmit="return false;">
 
-<p>
-Понедельник — Суббота
-</p>
+<label>Дата</label>
+<input type="date" id="assignDate">
 
+<label>Сотрудник</label>
+<select id="assignEmployee">
+<option>Загрузка...</option>
+</select>
 
-<p>
-10:00 — 20:00
-</p>
-
-
-<button class="btn">
-Изменить
+<button class="btn" type="button" id="assignBtn" style="margin-top:10px;">
+Назначить
 </button>
 
+</form>
 
 </div>
-
-
-
-
 
 
 <div class="card" style="margin-top:25px;">
 
-
 <h2>
-Праздничные дни
+Статистика за текущий месяц
 </h2>
 
-
-<p>
-Добавление выходных и сокращённых дней.
-</p>
-
-
-<button class="btn">
-Добавить дату
-</button>
-
+<div id="statsContainer">
+<p>Загрузка...</p>
+</div>
 
 </div>
 
 
-
-
-
-
-<div class="card" style="margin-top:25px;">
-
-
-<h2>
-Расписание сотрудников
+<h2 style="margin-top:30px;">
+Ближайшие 5 недель
 </h2>
 
-
-<p>
-Анна:
-10:00 — 18:00
-</p>
-
-
-<p>
-Иван:
-12:00 — 20:00
-</p>
-
-
-<button class="btn">
-Настроить
-</button>
-
-
+<div id="scheduleContainer" style="margin-top:15px;">
+<p>Загрузка...</p>
 </div>
-
 
 
 </div>
@@ -123,9 +88,19 @@
 <div id="footer"></div>
 
 
-<script src="../js/components.js"></script>
-<script src="../js/script.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+<script src="../js/supabase.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/components.js"></script>
+<script src="../js/ui.js"></script>
+
+<script src="../js/script.js"></script>
+<script src="../js/schedule.js"></script>
+
+<script>
+initAdminSchedule();
+</script>
 
 </body>
 

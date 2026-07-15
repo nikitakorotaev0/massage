@@ -67,7 +67,7 @@ async function attachServiceAndEmployeeNames(appointments){
   appointments.forEach(a => {
     a.service_name = servicesById[a.service_id] ? servicesById[a.service_id].name : "Услуга";
     const emp = profilesById[a.employee_id];
-    a.employee_name = emp ? `${emp.first_name} ${emp.last_name}` : "Мастер";
+    a.employee_name = emp ? `${emp.first_name} ${emp.last_name}` : "Мастер не назначен";
   });
 
   return appointments;
@@ -107,11 +107,15 @@ async function initNearestAppointmentWidget(){
 
   const appointment = data[0];
 
+  const masterText = appointment.employee_id
+    ? ` у мастера ${appointment.employee_name}`
+    : "";
+
   container.innerHTML = `
     <p>
       <strong>${formatDateRu(appointment.date)}</strong>,
       ${formatTimeShort(appointment.start_time)}
-      — ${appointment.service_name} у мастера ${appointment.employee_name}
+      — ${appointment.service_name}${masterText}
     </p>
 
     <a class="btn" href="appointments.html">
@@ -205,7 +209,7 @@ async function renderUpcomingAppointments(){
 
 async function cancelAppointment(appointmentId){
 
-  const confirmed = confirm("Отменить эту запись?");
+  const confirmed = await showConfirm("Отменить эту запись?");
   if(!confirmed){
     return;
   }
@@ -219,10 +223,11 @@ async function cancelAppointment(appointmentId){
     .eq("client_id", user.id);
 
   if(error){
-    alert("Не удалось отменить запись: " + error.message);
+    showToast("Не удалось отменить запись: " + error.message, "error");
     return;
   }
 
+  showToast("Запись отменена", "success");
   await renderUpcomingAppointments();
 }
 
@@ -372,9 +377,10 @@ async function leaveReview(appointmentId, rating, comment){
     });
 
   if(error){
-    alert("Не удалось сохранить отзыв: " + error.message);
+    showToast("Не удалось сохранить отзыв: " + error.message, "error");
     return;
   }
 
+  showToast("Спасибо за отзыв!", "success");
   await renderHistory();
 }

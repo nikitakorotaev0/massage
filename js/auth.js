@@ -1,4 +1,33 @@
 // =====================================
+// Служебное: определение корневого пути страницы
+// (нужно, чтобы редиректы вроде logout() корректно работали
+// как из корня сайта, так и из /client/, /employee/, /admin/)
+// =====================================
+
+function getRootPath(){
+
+  const path = window.location.pathname;
+
+  if(
+    path.includes("/client/") ||
+    path.includes("/employee/") ||
+    path.includes("/admin/")
+  ){
+    return "../";
+  }
+
+  return "";
+}
+
+
+// Специальный логин администратора: вместо реального email
+// в форме входа можно ввести "admin" — он смэпится на
+// служебный email учётной записи администратора в Supabase Auth.
+const ADMIN_LOGIN_ALIAS = "admin";
+const ADMIN_LOGIN_EMAIL = "admin@dzen.local";
+
+
+// =====================================
 // Авторизация пользователя
 // =====================================
 
@@ -6,8 +35,8 @@
 async function login(){
 
 
-const email =
-document.getElementById("email").value;
+const emailInput =
+document.getElementById("email").value.trim();
 
 
 const password =
@@ -16,13 +45,17 @@ document.getElementById("password").value;
 
 
 
-if(!email || !password){
+if(!emailInput || !password){
 
-alert("Введите email и пароль");
+showToast("Введите email и пароль", "error");
 
 return;
 
 }
+
+
+const email =
+emailInput.toLowerCase() === ADMIN_LOGIN_ALIAS ? ADMIN_LOGIN_EMAIL : emailInput;
 
 
 
@@ -41,7 +74,7 @@ password: password
 
 if(error){
 
-alert(error.message);
+showToast(error.message, "error");
 
 return;
 
@@ -66,7 +99,7 @@ await supabaseClient
 
 if(profileError){
 
-alert("Профиль пользователя не найден");
+showToast("Профиль пользователя не найден", "error");
 
 return;
 
@@ -77,7 +110,7 @@ return;
 
 if(profile.is_banned){
 
-alert("Ваш аккаунт заблокирован. Обратитесь к администрации салона.");
+showToast("Ваш аккаунт заблокирован. Обратитесь к администрации салона.", "error");
 
 await supabaseClient.auth.signOut();
 
@@ -143,7 +176,7 @@ document.getElementById("password").value;
 
 if(!firstName || !lastName || !phone || !email || !password){
 
-alert("Заполните все поля");
+showToast("Заполните все поля", "error");
 
 return;
 
@@ -152,7 +185,7 @@ return;
 
 if(password.length < 6){
 
-alert("Пароль должен содержать не менее 6 символов");
+showToast("Пароль должен содержать не менее 6 символов", "error");
 
 return;
 
@@ -171,7 +204,7 @@ password: password
 
 if(error){
 
-alert(error.message);
+showToast(error.message, "error");
 
 return;
 
@@ -183,7 +216,7 @@ const user = data.user;
 
 if(!user){
 
-alert("Не удалось создать пользователя. Попробуйте ещё раз.");
+showToast("Не удалось создать пользователя. Попробуйте ещё раз.", "error");
 
 return;
 
@@ -212,7 +245,7 @@ role: "client"
 
 if(profileError){
 
-alert("Аккаунт создан, но не удалось сохранить профиль: " + profileError.message);
+showToast("Аккаунт создан, но не удалось сохранить профиль: " + profileError.message, "error");
 
 return;
 
@@ -221,13 +254,15 @@ return;
 
 if(data.session){
 
+showToast("Регистрация прошла успешно!", "success");
+
 window.location.href="client/dashboard.html";
 
 }
 
 else{
 
-alert("Регистрация прошла успешно. Проверьте почту для подтверждения email, затем войдите.");
+showToast("Регистрация прошла успешно. Проверьте почту для подтверждения email, затем войдите.", "success");
 
 window.location.href="login.html";
 
@@ -245,7 +280,7 @@ async function logout(){
 await supabaseClient.auth.signOut();
 
 
-window.location.href="../login.html";
+window.location.href = getRootPath() + "login.html";
 
 
 }

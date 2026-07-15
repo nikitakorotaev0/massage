@@ -77,11 +77,15 @@ header.innerHTML = `
 
 
 
+<span id="authNavSlot" style="display:flex; gap:16px;">
+
 <a href="${root}login.html">
 
-Выход
+Вход
 
 </a>
+
+</span>
 
 
 
@@ -96,6 +100,40 @@ header.innerHTML = `
 
 `;
 
+
+updateAuthNav();
+
+}
+
+
+async function updateAuthNav(){
+
+  const slot = document.getElementById("authNavSlot");
+
+  if(!slot){
+    return;
+  }
+
+  if(typeof supabaseClient === "undefined" || typeof getProfile !== "function"){
+    return;
+  }
+
+  const profile = await getProfile();
+
+  if(!profile){
+    slot.innerHTML = `<a href="${root}login.html">Вход</a>`;
+    return;
+  }
+
+  let dashboardUrl = `${root}client/dashboard.html`;
+
+  if(profile.role === "employee"){
+    dashboardUrl = `${root}employee/dashboard.html`;
+  }else if(profile.role === "admin"){
+    dashboardUrl = `${root}admin/dashboard.html`;
+  }
+
+  slot.innerHTML = `<a href="${dashboardUrl}">Личный кабинет</a>`;
 }
 
 
