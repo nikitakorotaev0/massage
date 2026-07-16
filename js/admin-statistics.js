@@ -45,7 +45,7 @@ async function loadOverviewStats(){
 
   const {data: completedAppointments, error} = await supabaseClient
     .from("appointments")
-    .select("service_id")
+    .select("service_id, final_price")
     .gte("date", monthStart)
     .eq("status", "completed");
 
@@ -64,7 +64,10 @@ async function loadOverviewStats(){
   const priceById = {};
   (serviceRows || []).forEach(s => { priceById[s.id] = s.price; });
 
-  const revenue = completedAppointments.reduce((sum, a) => sum + (priceById[a.service_id] || 0), 0);
+  const revenue = completedAppointments.reduce((sum, a) => {
+    const amount = (a.final_price !== null && a.final_price !== undefined) ? a.final_price : (priceById[a.service_id] || 0);
+    return sum + amount;
+  }, 0);
 
   document.getElementById("statRevenue").textContent = `${revenue.toLocaleString("ru-RU")} ₽`;
 }

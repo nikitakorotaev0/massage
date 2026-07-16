@@ -6,7 +6,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Промокоды — Админ-панель</title>
+<title>Промокоды — Админ-панель — Дзен</title>
 
 <link rel="stylesheet" href="../css/style.css">
 
@@ -27,98 +27,97 @@
 Промокоды
 </h1>
 
-
-
+<p style="margin-bottom:20px;">
+<a class="btn" href="dashboard.html">Панель</a>
+</p>
 
 
 <div class="card">
-
 
 <h2>
 Создать промокод
 </h2>
 
+<form onsubmit="return false;">
 
-<button class="btn">
-Добавить
+<label>Код</label>
+<input type="text" id="promoCode" placeholder="DZEN10" style="text-transform:uppercase;">
+
+<label style="margin-top:15px;">Тип вознаграждения</label>
+
+<label style="font-weight:normal;">
+<input type="radio" name="promoType" id="promoTypeDiscount" checked>
+Скидка % от заказа
+</label>
+
+<label style="font-weight:normal;">
+<input type="radio" name="promoType" id="promoTypeFreeService">
+Бесплатная услуга
+</label>
+
+<div id="promoDiscountBox" style="margin-top:10px;">
+<label>Размер скидки (%)</label>
+<input type="number" id="promoDiscount" placeholder="10" min="1" max="100">
+</div>
+
+<div id="promoFreeServiceBox" style="margin-top:10px; display:none;">
+<label>Бесплатная услуга</label>
+<select id="promoFreeService">
+<option>Загрузка...</option>
+</select>
+</div>
+
+
+<label style="margin-top:15px;">Количество использований</label>
+
+<label style="font-weight:normal;">
+<input type="radio" name="promoLimit" id="promoLimitUnlimited" checked>
+Неограничено
+</label>
+
+<label style="font-weight:normal;">
+<input type="radio" name="promoLimit" id="promoLimitLimited">
+Ограничено
+</label>
+
+<div id="promoUsesLeftBox" style="margin-top:10px; display:none;">
+<label>Количество использований</label>
+<input type="number" id="promoUsesLeft" placeholder="5" min="1">
+</div>
+
+
+<label style="margin-top:15px;">Срок действия</label>
+
+<label style="font-weight:normal;">
+<input type="radio" name="promoTime" id="promoTimeUnlimited" checked>
+Бессрочно
+</label>
+
+<label style="font-weight:normal;">
+<input type="radio" name="promoTime" id="promoTimePeriod">
+Указать период
+</label>
+
+<div id="promoPeriodBox" style="margin-top:10px; display:none;">
+<label>Действует с</label>
+<input type="date" id="promoStartsAt">
+
+<label style="margin-top:10px;">Действует по</label>
+<input type="date" id="promoExpiresAt">
+</div>
+
+</form>
+
+<button class="btn" type="button" id="createPromoBtn" style="margin-top:20px;">
+Создать промокод
 </button>
 
-
 </div>
 
 
-
-
-
-
-
-<div class="card" style="margin-top:30px;">
-
-
-<h2>
-DRAGON10
-</h2>
-
-
-<p>
-Скидка:
-10%
-</p>
-
-
-<p>
-Использований осталось:
-25
-</p>
-
-
-<p>
-Активен до:
-01.09.2026
-</p>
-
-
-<button class="btn">
-Изменить
-</button>
-
-
+<div id="promoListContainer" style="margin-top:30px;">
+<p>Загрузка...</p>
 </div>
-
-
-
-
-
-
-<div class="card" style="margin-top:20px;">
-
-
-<h2>
-FIRST500
-</h2>
-
-
-<p>
-Бесплатная услуга:
-Массаж спины
-</p>
-
-
-<p>
-Использований осталось:
-5
-</p>
-
-
-<p>
-Статус:
-Активен
-</p>
-
-
-
-</div>
-
 
 
 </div>
@@ -129,11 +128,19 @@ FIRST500
 <div id="footer"></div>
 
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="../js/supabase.js"></script>
+<script src="../js/auth.js"></script>
 <script src="../js/components.js"></script>
 <script src="../js/ui.js"></script>
 
 <script src="../js/script.js"></script>
+<script src="../js/promo.js"></script>
 
+<script>
+initAdminPromo();
+</script>
 
 </body>
 

@@ -14,6 +14,7 @@ let currentProfile = null;
 let servicesCache = [];
 let selectedTime = null;
 let assignedEmployeeId = null;
+let appliedPromo = null;
 
 
 // ---------- Утилиты работы со временем ----------
@@ -84,9 +85,13 @@ async function initBooking(){
 
   await loadServices();
 
-  document.getElementById("serviceSelect").addEventListener("change", refreshSlots);
+  document.getElementById("serviceSelect").addEventListener("change", () => {
+    clearAppliedPromo();
+    refreshSlots();
+  });
   dateInput.addEventListener("change", refreshSlots);
 
+  document.getElementById("applyPromoBtn").addEventListener("click", applyPromoCode);
   document.getElementById("submitBookingBtn").addEventListener("click", submitBooking);
 
   await refreshSlots();
@@ -211,6 +216,8 @@ async function refreshSlots(){
   if(!service){
     return;
   }
+
+  updatePriceDisplay();
 
   container.innerHTML = `<p>Загрузка свободных слотов...</p>`;
 
@@ -371,6 +378,30 @@ async function submitBooking(){
       return;
     }
 
+    let promoIdToSave = null;
+    let finalPrice = service.price;
+
+    if(appliedPromo){
+
+      // Перепроверяем промокод прямо перед вставкой — на случай,
+      // если лимит использований исчерпался, пока клиент заполнял форму.
+      const {data: freshPromo, error: promoCheckError} = await supabaseClient
+        .from("promo_codes")
+        .select("id, discount, free_service_id, uses_left, active, starts_at, expires_at")
+        .eq("id", appliedPromo.id)
+        .maybeSingle();
+
+      if(promoCheckError || !freshPromo || !freshPromo.active || (freshPromo.uses_left !== null && freshPromo.uses_left <= 0)){
+        showMessage("Промокод больше не действует. Уберите его и повторите запись.", true);
+        appliedPromo = null;
+        updatePriceDisplay();
+        return;
+      }
+
+      finalPrice = computeFinalPrice(service);
+      promoIdToSave = freshPromo.id;
+    }
+
     const {data: {user}} = await supabaseClient.auth.getUser();
 
     const {error} = await supabaseClient
@@ -385,7 +416,9 @@ async function submitBooking(){
         start_time: startTimeStr,
         end_time: endTimeStr,
         status: "booked",
-        created_by: user.id
+        created_by: user.id,
+        promo_id: promoIdToSave,
+        final_price: finalPrice
       });
 
     if(error){
@@ -400,6 +433,22 @@ async function submitBooking(){
 
       showMessage("Не удалось создать запись: " + error.message, true);
       return;
+    }
+
+    if(promoIdToSave){
+
+      const {data: promoRow} = await supabaseClient
+        .from("promo_codes")
+        .select("uses_left")
+        .eq("id", promoIdToSave)
+        .maybeSingle();
+
+      if(promoRow && promoRow.uses_left !== null){
+        await supabaseClient
+          .from("promo_codes")
+          .update({uses_left: Math.max(0, promoRow.uses_left - 1)})
+          .eq("id", promoIdToSave);
+      }
     }
 
     showToast("Запись успешно создана!", "success");
@@ -420,5 +469,150 @@ async function submitBooking(){
   }
 }
 
+
+// ---------- Промокод ----------
+
+function showPromoMessage(text, isError){
+  const box = document.getElementById("promoMessage");
+  if(!box) return;
+  box.textContent = text;
+  box.style.display = text ? "block" : "none";
+  box.style.color = isError ? "#b02a2a" : "#173f35";
+}
+
+function clearAppliedPromo(){
+  appliedPromo = null;
+  showPromoMessage("", false);
+  updatePriceDisplay();
+}
+
+function updatePriceDisplay(){
+
+  const priceBox = document.getElementById("priceInfo");
+  const serviceId = document.getElementById("serviceSelect").value;
+  const service = servicesCache.find(s => String(s.id) === String(serviceId));
+
+  if(!service){
+    priceBox.style.display = "none";
+    return;
+  }
+
+  const finalPrice = computeFinalPrice(service);
+
+  priceBox.style.display = "block";
+
+  if(appliedPromo && finalPrice !== service.price){
+    priceBox.innerHTML = `Стоимость: <s>${service.price} ₽</s> <strong>${finalPrice} ₽</strong>`;
+  }else{
+    priceBox.innerHTML = `Стоимость: <strong>${service.price} ₽</strong>`;
+  }
+}
+
+function computeFinalPrice(service){
+
+  if(!appliedPromo){
+    return service.price;
+  }
+
+  if(appliedPromo.free_service_id){
+    return String(appliedPromo.free_service_id) === String(service.id) ? 0 : service.price;
+  }
+
+  if(appliedPromo.discount){
+    return Math.round(service.price * (100 - appliedPromo.discount) / 100);
+  }
+
+  return service.price;
+}
+
+
+async function applyPromoCode(){
+
+  const codeInput = document.getElementById("promoCodeInput");
+  const code = codeInput.value.trim().toUpperCase();
+
+  if(!code){
+    showPromoMessage("Введите промокод", true);
+    return;
+  }
+
+  const serviceId = document.getElementById("serviceSelect").value;
+  const service = servicesCache.find(s => String(s.id) === String(serviceId));
+
+  if(!service){
+    showPromoMessage("Сначала выберите услугу", true);
+    return;
+  }
+
+  const {data: promo, error} = await supabaseClient
+    .from("promo_codes")
+    .select("id, code, discount, free_service_id, uses_left, starts_at, expires_at, active")
+    .eq("code", code)
+    .maybeSingle();
+
+  if(error){
+    showPromoMessage("Не удалось проверить промокод: " + error.message, true);
+    return;
+  }
+
+  if(!promo){
+    showPromoMessage("Промокод не найден", true);
+    return;
+  }
+
+  if(!promo.active){
+    showPromoMessage("Промокод больше не действует", true);
+    return;
+  }
+
+  const today = todayDateString();
+
+  if(promo.starts_at && promo.starts_at > today){
+    showPromoMessage("Этот промокод ещё не начал действовать", true);
+    return;
+  }
+
+  if(promo.expires_at && promo.expires_at < today){
+    showPromoMessage("Срок действия промокода истёк", true);
+    return;
+  }
+
+  if(promo.uses_left !== null && promo.uses_left <= 0){
+    showPromoMessage("Промокод уже исчерпан", true);
+    return;
+  }
+
+  if(promo.free_service_id && String(promo.free_service_id) !== String(service.id)){
+    showPromoMessage("Этот промокод действует только на определённую услугу. Выберите её, чтобы применить код.", true);
+    return;
+  }
+
+  const {data: {user}} = await supabaseClient.auth.getUser();
+
+  const {data: previousUse, error: usageError} = await supabaseClient
+    .from("appointments")
+    .select("id")
+    .eq("client_id", user.id)
+    .eq("promo_id", promo.id)
+    .neq("status", "cancelled")
+    .maybeSingle();
+
+  if(usageError){
+    showPromoMessage("Не удалось проверить использование промокода: " + usageError.message, true);
+    return;
+  }
+
+  if(previousUse){
+    showPromoMessage("Вы уже использовали этот промокод", true);
+    return;
+  }
+
+  appliedPromo = promo;
+  showPromoMessage(`Промокод «${promo.code}» применён`, false);
+  updatePriceDisplay();
+}
+
+
+// ---------- Инициализация ----------
 
 initBooking();

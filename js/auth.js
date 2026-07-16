@@ -226,9 +226,7 @@ return;
 const {error: profileError} =
 await supabaseClient
 .from("profiles")
-.insert({
-
-id: user.id,
+.update({
 
 first_name: firstName,
 
@@ -240,7 +238,8 @@ email: email,
 
 role: "client"
 
-});
+})
+.eq("id", user.id);
 
 
 if(profileError){
