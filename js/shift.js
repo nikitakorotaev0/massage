@@ -30,8 +30,48 @@ async function initEmployeeShift(){
   document.getElementById("startShiftBtn").addEventListener("click", startShift);
   document.getElementById("endShiftBtn").addEventListener("click", endShift);
 
+  await autoCloseStaleShifts();
   await renderTodaySchedule();
   await refreshShiftStatus();
+}
+
+
+// Если сотрудник забыл нажать "Закончить смену", смена автоматически
+// закрывается по времени закрытия салона (из настроек, иначе 20:00) —
+// как только сотрудник в следующий раз откроет кабинет.
+async function autoCloseStaleShifts(){
+
+  const settings = await fetchSalonSettings();
+  const workEnd = settings.work_end || "20:00:00";
+
+  const today = shiftTodayDateString();
+  const now = new Date();
+  const todayClosingTime = new Date(`${today}T${workEnd}`);
+
+  const {data: openShifts, error} = await supabaseClient
+    .from("employee_shifts")
+    .select("id, shift_date")
+    .eq("employee_id", shiftEmployeeId)
+    .is("shift_end", null);
+
+  if(error || !openShifts || openShifts.length === 0){
+    return;
+  }
+
+  for(const shift of openShifts){
+
+    const isPastDay = shift.shift_date < today;
+    const isTodayPastClosing = shift.shift_date === today && now >= todayClosingTime;
+
+    if(isPastDay || isTodayPastClosing){
+      const closingTimestamp = new Date(`${shift.shift_date}T${workEnd}`).toISOString();
+
+      await supabaseClient
+        .from("employee_shifts")
+        .update({shift_end: closingTimestamp})
+        .eq("id", shift.id);
+    }
+  }
 }
 
 

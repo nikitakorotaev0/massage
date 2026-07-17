@@ -239,6 +239,22 @@ async function refreshSlots(){
     return;
   }
 
+  // Проверка рабочего дня недели по настройкам салона
+  const salonSettings = await fetchSalonSettings();
+
+  if(salonSettings.work_days){
+    const [y, m, d] = date.split("-").map(n => parseInt(n, 10));
+    const jsDay = new Date(y, m - 1, d).getDay();
+    const isoDay = jsDay === 0 ? 7 : jsDay;
+    const workDays = salonSettings.work_days.split(",").map(n => parseInt(n, 10));
+
+    if(!workDays.includes(isoDay)){
+      container.innerHTML = "";
+      showMessage("В этот день недели салон не работает. Пожалуйста, выберите другую дату.", true);
+      return;
+    }
+  }
+
   // Мастер, назначенный администратором на эту дату
   let assigned;
   try{

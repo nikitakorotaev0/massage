@@ -188,12 +188,12 @@ footer.innerHTML = `
 </h3>
 
 
-<p>
+<p id="footerPhone">
 +7 (900) 000-00-00
 </p>
 
 
-<p>
+<p id="footerHours">
 Пн–Сб: 10:00–20:00
 </p>
 
@@ -264,4 +264,77 @@ footer.innerHTML = `
 
 `;
 
+updateFooterContacts();
+
+}
+
+
+const WEEKDAY_ABBR = ["", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+
+function formatWorkDays(workDaysStr){
+
+  if(!workDaysStr){
+    return "Ежедневно";
+  }
+
+  const days = workDaysStr.split(",").map(n => parseInt(n, 10)).filter(n => n >= 1 && n <= 7).sort((a, b) => a - b);
+
+  if(days.length === 0){
+    return "Ежедневно";
+  }
+
+  let contiguous = true;
+  for(let i = 1; i < days.length; i++){
+    if(days[i] !== days[i - 1] + 1){
+      contiguous = false;
+      break;
+    }
+  }
+
+  if(contiguous && days.length > 1){
+    return `${WEEKDAY_ABBR[days[0]]}–${WEEKDAY_ABBR[days[days.length - 1]]}`;
+  }
+
+  return days.map(d => WEEKDAY_ABBR[d]).join(", ");
+}
+
+
+async function fetchSalonSettings(){
+
+  if(typeof supabaseClient === "undefined"){
+    return {};
+  }
+
+  const {data, error} = await supabaseClient
+    .from("settings")
+    .select("key, value");
+
+  if(error || !data){
+    return {};
+  }
+
+  const map = {};
+  data.forEach(row => { map[row.key] = row.value; });
+  return map;
+}
+
+
+async function updateFooterContacts(){
+
+  const phoneEl = document.getElementById("footerPhone");
+  const hoursEl = document.getElementById("footerHours");
+
+  if(!phoneEl || !hoursEl){
+    return;
+  }
+
+  const settings = await fetchSalonSettings();
+
+  if(settings.contact_phone){
+    phoneEl.textContent = settings.contact_phone;
+  }
+
+  if(settings.work_start && settings.work_end){
+    hoursEl.textContent = `${formatWorkDays(settings.work_days)}: ${settings.work_start.slice(0,5)}–${settings.work_end.slice(0,5)}`;
+  }
 }

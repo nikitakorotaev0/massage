@@ -45,7 +45,7 @@
 Адрес
 </h3>
 
-<p>
+<p id="contactAddress">
 г. Арти<br>
 ул. Восточная, 15
 </p>
@@ -61,8 +61,23 @@
 Телефон
 </h3>
 
-<p>
+<p id="contactPhone">
 +7 (900) 000-00-00
+</p>
+
+</div>
+
+
+
+
+<div class="card">
+
+<h3>
+Email
+</h3>
+
+<p id="contactEmail">
+info@dzen.ru
 </p>
 
 </div>
@@ -76,7 +91,7 @@
 Режим работы
 </h3>
 
-<p>
+<p id="contactHours">
 Пн–Сб: 10:00–20:00<br>
 Вс: выходной
 </p>
@@ -109,7 +124,7 @@
 
 
 
-<a class="btn" href="register.html">
+<a class="btn" href="client/booking.html">
 Записаться
 </a>
 
@@ -145,6 +160,27 @@
 <script src="js/ui.js"></script>
 
 <script src="js/script.js"></script>
+
+<script>
+(async function(){
+  const settings = await fetchSalonSettings();
+
+  if(settings.address){
+    document.getElementById("contactAddress").textContent = settings.address;
+  }
+  if(settings.contact_phone){
+    document.getElementById("contactPhone").textContent = settings.contact_phone;
+  }
+  if(settings.contact_email){
+    document.getElementById("contactEmail").textContent = settings.contact_email;
+  }
+  if(settings.work_start && settings.work_end){
+    const daysText = formatWorkDays(settings.work_days);
+    document.getElementById("contactHours").innerHTML =
+      `${daysText}: ${settings.work_start.slice(0,5)}–${settings.work_end.slice(0,5)}`;
+  }
+})();
+</script>
 
 
 </body>

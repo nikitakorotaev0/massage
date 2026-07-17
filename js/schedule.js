@@ -4,8 +4,8 @@
 // =====================================
 
 const SCHEDULE_DAYS_AHEAD = 34;
-const DEFAULT_SHIFT_START = "10:00:00";
-const DEFAULT_SHIFT_END = "20:00:00";
+let DEFAULT_SHIFT_START = "10:00:00";
+let DEFAULT_SHIFT_END = "20:00:00";
 
 let scheduleEmployeesCache = [];
 let scheduleRowsByDate = {};
@@ -43,6 +43,14 @@ async function initAdminSchedule(){
     showToast("Доступ только для администраторов", "error");
     window.location.href = "../login.html";
     return;
+  }
+
+  const salonSettings = await fetchSalonSettings();
+  if(salonSettings.work_start){
+    DEFAULT_SHIFT_START = salonSettings.work_start;
+  }
+  if(salonSettings.work_end){
+    DEFAULT_SHIFT_END = salonSettings.work_end;
   }
 
   await loadScheduleEmployees();
@@ -262,10 +270,47 @@ async function unassignDate(date){
 
 // ---------- Статистика по сменам ----------
 
+async function autoCloseAllStaleShifts(){
+
+  const settings = await fetchSalonSettings();
+  const workEnd = settings.work_end || "20:00:00";
+
+  const today = scheduleDateString(0);
+  const now = new Date();
+  const todayClosingTime = new Date(`${today}T${workEnd}`);
+
+  const {data: openShifts, error} = await supabaseClient
+    .from("employee_shifts")
+    .select("id, shift_date")
+    .is("shift_end", null);
+
+  if(error || !openShifts || openShifts.length === 0){
+    return;
+  }
+
+  for(const shift of openShifts){
+
+    const isPastDay = shift.shift_date < today;
+    const isTodayPastClosing = shift.shift_date === today && now >= todayClosingTime;
+
+    if(isPastDay || isTodayPastClosing){
+      const closingTimestamp = new Date(`${shift.shift_date}T${workEnd}`).toISOString();
+
+      await supabaseClient
+        .from("employee_shifts")
+        .update({shift_end: closingTimestamp})
+        .eq("id", shift.id);
+    }
+  }
+}
+
+
 async function loadShiftStats(){
 
   const container = document.getElementById("statsContainer");
   container.innerHTML = `<p>Загрузка...</p>`;
+
+  await autoCloseAllStaleShifts();
 
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();

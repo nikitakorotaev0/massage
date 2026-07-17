@@ -6,7 +6,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Настройки — Админ-панель</title>
+<title>Настройки — Админ-панель — Дзен</title>
 
 <link rel="stylesheet" href="../css/style.css">
 
@@ -15,189 +15,75 @@
 
 <body>
 
-
 <div id="header"></div>
-
-
 
 
 <main class="section">
 
-
 <div class="container">
 
 
-
 <h1 class="page-title">
-Настройки
+Настройки салона
 </h1>
 
+<p style="margin-bottom:20px;">
+<a class="btn" href="dashboard.html">Панель</a>
+</p>
 
 
+<div class="card form-card">
 
+<form onsubmit="return false;">
 
+<label>Время начала работы</label>
+<input type="time" id="settingWorkStart">
 
-<div class="card">
+<label style="margin-top:15px;">Время окончания работы</label>
+<input type="time" id="settingWorkEnd">
 
+<label style="margin-top:15px;">Рабочие дни недели</label>
+<div id="workDaysContainer"></div>
 
-<h2>
-Основные настройки
-</h2>
+<label style="margin-top:15px;">Контактный телефон</label>
+<input type="text" id="settingPhone" placeholder="+7 (900) 000-00-00">
 
+<label style="margin-top:15px;">Контактный email</label>
+<input type="email" id="settingEmail" placeholder="info@dzen.ru">
 
+<label style="margin-top:15px;">Адрес</label>
+<input type="text" id="settingAddress" placeholder="г. Арти, ул. Восточная, 15">
 
-<label>
-Название салона
-</label>
+</form>
 
-
-<input 
-type="text"
-value="Дзен">
-
-
-
-
-
-<label style="margin-top:15px;">
-Телефон
-</label>
-
-
-<input
-type="tel"
-value="+7 (900) 000-00-00">
-
-
-
-
-
-<label style="margin-top:15px;">
-Email
-</label>
-
-
-<input
-type="email"
-value="info@dragon.ru">
-
-
-
-
-
-<button class="btn" style="margin-top:20px;">
-
-Сохранить
-
+<button class="btn" type="button" id="saveSettingsBtn" style="margin-top:20px;">
+Сохранить настройки
 </button>
 
-
-
 </div>
 
 
-
-
-
-
-
-<div class="card" style="margin-top:30px;">
-
-
-<h2>
-Правила записи
-</h2>
-
-
-
-<p>
-Максимальный срок записи:
-14 дней вперёд
-</p>
-
-
-
-<p>
-Автоматическая блокировка после:
-2 пропусков
-</p>
-
-
-
-<button class="btn">
-
-Изменить
-
-</button>
-
-
-
 </div>
-
-
-
-
-
-
-
-<div class="card" style="margin-top:30px;">
-
-
-<h2>
-Уведомления
-</h2>
-
-
-
-<p>
-Email-уведомления:
-Включены
-</p>
-
-
-
-<p>
-SMS:
-Отключены
-</p>
-
-
-
-<button class="btn">
-
-Настроить
-
-</button>
-
-
-
-</div>
-
-
-
-
-
-
-</div>
-
 
 </main>
-
-
 
 
 <div id="footer"></div>
 
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-
-
+<script src="../js/supabase.js"></script>
+<script src="../js/auth.js"></script>
 <script src="../js/components.js"></script>
-
 <script src="../js/ui.js"></script>
 
 <script src="../js/script.js"></script>
+<script src="../js/settings.js"></script>
 
+<script>
+initAdminSettings();
+</script>
 
 </body>
 

@@ -603,3 +603,57 @@ async function loadCommentsFeed(){
     container.appendChild(card);
   });
 }
+
+
+// ---------- Предпросмотр предстоящих записей (employee/dashboard.html) ----------
+
+async function loadUpcomingAppointmentsPreview(){
+
+  const container = document.getElementById("upcomingAppointmentsPreview");
+  if(!container) return;
+
+  const {data: {user}} = await supabaseClient.auth.getUser();
+
+  if(!user){
+    return;
+  }
+
+  const today = empTodayDateString(0);
+
+  const {data, error} = await supabaseClient
+    .from("appointments")
+    .select("id, service_id, date, start_time, status, booked_for_name")
+    .eq("employee_id", user.id)
+    .gte("date", today)
+    .neq("status", "cancelled")
+    .order("date", {ascending: true})
+    .order("start_time", {ascending: true})
+    .limit(5);
+
+  if(error){
+    container.innerHTML = `<p>Не удалось загрузить записи: ${error.message}</p>`;
+    return;
+  }
+
+  if(!data || data.length === 0){
+    container.innerHTML = `<p>Предстоящих записей нет.</p>`;
+    return;
+  }
+
+  const serviceIds = [...new Set(data.map(a => a.service_id).filter(Boolean))];
+  let servicesById = {};
+
+  if(serviceIds.length > 0){
+    const {data: serviceRows} = await supabaseClient.from("services").select("id, name").in("id", serviceIds);
+    (serviceRows || []).forEach(s => { servicesById[s.id] = s; });
+  }
+
+  container.innerHTML = "";
+
+  data.forEach(a => {
+    const row = document.createElement("p");
+    const serviceName = servicesById[a.service_id] ? servicesById[a.service_id].name : "Услуга";
+    row.innerHTML = `<strong>${empFormatDate(a.date)}, ${empFormatTime(a.start_time)}</strong> — ${a.booked_for_name} (${serviceName})`;
+    container.appendChild(row);
+  });
+}
