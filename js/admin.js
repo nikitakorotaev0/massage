@@ -510,6 +510,7 @@ async function initAdminDashboard(){
     return;
   }
 
+  await autoCloseOverdueAppointments();
   await loadDashboardCounters();
   await loadTodayAppointmentsPreview();
 }
@@ -560,7 +561,7 @@ async function loadTodayAppointmentsPreview(){
 
   const {data, error} = await supabaseClient
     .from("appointments")
-    .select("id, service_id, employee_id, start_time, status, booked_for_name")
+    .select("id, service_id, employee_id, start_time, status, booked_for_name, auto_closed")
     .eq("date", today)
     .neq("status", "cancelled")
     .order("start_time", {ascending: true});
@@ -609,6 +610,7 @@ async function loadTodayAppointmentsPreview(){
       <p><strong>Услуга:</strong><br>${serviceName}</p>
       <p><strong>Мастер:</strong><br>${employeeName}</p>
       <p><strong>Статус:</strong><br>${ADMIN_STATUS_LABELS[a.status] || a.status}</p>
+      ${a.auto_closed ? `<p><strong>⚠ Не подтверждено сотрудником</strong></p>` : ""}
     `;
 
     container.appendChild(card);

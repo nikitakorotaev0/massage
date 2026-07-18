@@ -87,6 +87,8 @@ async function initNearestAppointmentWidget(){
     return;
   }
 
+  await autoCloseMyOverdueAppointments(user.id);
+
   const today = todayDateString();
 
   const {data, error} = await supabaseClient
@@ -140,12 +142,36 @@ async function initUpcomingAppointments(){
 }
 
 
+async function autoCloseMyOverdueAppointments(userId){
+
+  const today = todayDateString();
+  const nowTime = new Date().toTimeString().slice(0, 8);
+
+  await supabaseClient
+    .from("appointments")
+    .update({status: "completed", auto_closed: true})
+    .eq("client_id", userId)
+    .eq("status", "booked")
+    .lt("date", today);
+
+  await supabaseClient
+    .from("appointments")
+    .update({status: "completed", auto_closed: true})
+    .eq("client_id", userId)
+    .eq("status", "booked")
+    .eq("date", today)
+    .lt("end_time", nowTime);
+}
+
+
 async function renderUpcomingAppointments(){
 
   const container = document.getElementById("appointmentsContainer");
   container.innerHTML = `<p>Загрузка...</p>`;
 
   const {data: {user}} = await supabaseClient.auth.getUser();
+
+  await autoCloseMyOverdueAppointments(user.id);
 
   const today = todayDateString();
 

@@ -240,19 +240,19 @@ async function refreshSlots(){
   }
 
   // Проверка рабочего дня недели по настройкам салона
+  // (по умолчанию Пн–Сб, пока админ явно не задал другое в настройках)
   const salonSettings = await fetchSalonSettings();
+  const workDaysStr = salonSettings.work_days || "1,2,3,4,5,6";
 
-  if(salonSettings.work_days){
-    const [y, m, d] = date.split("-").map(n => parseInt(n, 10));
-    const jsDay = new Date(y, m - 1, d).getDay();
-    const isoDay = jsDay === 0 ? 7 : jsDay;
-    const workDays = salonSettings.work_days.split(",").map(n => parseInt(n, 10));
+  const [y, m, d] = date.split("-").map(n => parseInt(n, 10));
+  const jsDay = new Date(y, m - 1, d).getDay();
+  const isoDay = jsDay === 0 ? 7 : jsDay;
+  const workDays = workDaysStr.split(",").map(n => parseInt(n, 10));
 
-    if(!workDays.includes(isoDay)){
-      container.innerHTML = "";
-      showMessage("В этот день недели салон не работает. Пожалуйста, выберите другую дату.", true);
-      return;
-    }
+  if(!workDays.includes(isoDay)){
+    container.innerHTML = "";
+    showMessage("В этот день недели салон не работает. Пожалуйста, выберите другую дату.", true);
+    return;
   }
 
   // Мастер, назначенный администратором на эту дату
@@ -287,8 +287,11 @@ async function refreshSlots(){
   const isToday = date === todayDateString();
   const nowMinutes = isToday ? (new Date().getHours() * 60 + new Date().getMinutes()) : -1;
 
-  const windowStart = timeStringToMinutes(assigned.start_time);
-  const windowEnd = timeStringToMinutes(assigned.end_time);
+  const salonWorkStart = timeStringToMinutes(salonSettings.work_start || "10:00:00");
+  const salonWorkEnd = timeStringToMinutes(salonSettings.work_end || "20:00:00");
+
+  const windowStart = Math.max(timeStringToMinutes(assigned.start_time), salonWorkStart);
+  const windowEnd = Math.min(timeStringToMinutes(assigned.end_time), salonWorkEnd);
 
   const slots = [];
 

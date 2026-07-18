@@ -75,10 +75,34 @@ function setFilter(filter){
 }
 
 
+async function autoCloseOwnOverdueAppointments(){
+
+  const today = empTodayDateString(0);
+  const nowTime = new Date().toTimeString().slice(0, 8);
+
+  await supabaseClient
+    .from("appointments")
+    .update({status: "completed", auto_closed: true})
+    .eq("employee_id", employeeId)
+    .eq("status", "booked")
+    .lt("date", today);
+
+  await supabaseClient
+    .from("appointments")
+    .update({status: "completed", auto_closed: true})
+    .eq("employee_id", employeeId)
+    .eq("status", "booked")
+    .eq("date", today)
+    .lt("end_time", nowTime);
+}
+
+
 async function loadEmployeeAppointments(){
 
   const container = document.getElementById("appointmentsListContainer");
   container.innerHTML = `<p>Загрузка...</p>`;
+
+  await autoCloseOwnOverdueAppointments();
 
   let fromDate, toDate;
 

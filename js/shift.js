@@ -137,9 +137,42 @@ async function refreshShiftStatus(){
 }
 
 
+// Проверяет, что сейчас — рабочий день и рабочее время салона
+// (по настройкам администратора, с разумными значениями по умолчанию).
+async function checkWithinWorkingHours(){
+
+  const settings = await fetchSalonSettings();
+  const workStart = settings.work_start || "10:00:00";
+  const workEnd = settings.work_end || "20:00:00";
+  const workDays = (settings.work_days || "1,2,3,4,5,6").split(",").map(n => parseInt(n, 10));
+
+  const now = new Date();
+  const jsDay = now.getDay();
+  const isoDay = jsDay === 0 ? 7 : jsDay;
+
+  if(!workDays.includes(isoDay)){
+    return {ok: false, reason: "Сегодня нерабочий день салона"};
+  }
+
+  const nowTime = now.toTimeString().slice(0, 8);
+
+  if(nowTime < workStart || nowTime >= workEnd){
+    return {ok: false, reason: `Смену можно начать или закончить только в рабочие часы салона (${workStart.slice(0,5)}–${workEnd.slice(0,5)})`};
+  }
+
+  return {ok: true};
+}
+
+
 async function startShift(){
 
   if(currentShiftRow){
+    return;
+  }
+
+  const check = await checkWithinWorkingHours();
+  if(!check.ok){
+    showToast(check.reason, "error");
     return;
   }
 
@@ -169,6 +202,12 @@ async function startShift(){
 async function endShift(){
 
   if(!currentShiftRow){
+    return;
+  }
+
+  const check = await checkWithinWorkingHours();
+  if(!check.ok){
+    showToast(check.reason, "error");
     return;
   }
 
