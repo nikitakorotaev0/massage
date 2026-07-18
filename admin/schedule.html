@@ -71,6 +71,33 @@
 </div>
 
 
+<div class="card" style="margin-top:25px;">
+
+<h2>
+Выходные и нерабочие дни
+</h2>
+
+<form onsubmit="return false;">
+
+<label>Дата</label>
+<input type="date" id="holidayDate">
+
+<label style="margin-top:10px;">Причина (необязательно)</label>
+<input type="text" id="holidayReason" placeholder="Например: санитарный день">
+
+</form>
+
+<button class="btn" type="button" id="addHolidayBtn" style="margin-top:15px;">
+Добавить выходной
+</button>
+
+<div id="holidaysListContainer" style="margin-top:20px;">
+<p>Загрузка...</p>
+</div>
+
+</div>
+
+
 <h2 style="margin-top:30px;">
 Ближайшие 5 недель
 </h2>

@@ -119,7 +119,7 @@ async function loadEmployeeAppointments(){
 
   const {data, error} = await supabaseClient
     .from("appointments")
-    .select("id, service_id, date, start_time, end_time, status, booked_for_name, booked_for_phone")
+    .select("id, service_id, date, start_time, end_time, status, booked_for_name, booked_for_phone, booking_group_id")
     .eq("employee_id", employeeId)
     .gte("date", fromDate)
     .lte("date", toDate)
@@ -149,11 +149,15 @@ async function loadEmployeeAppointments(){
     (serviceRows || []).forEach(s => { servicesById[s.id] = s; });
   }
 
+  data.forEach(a => { a.service_name = servicesById[a.service_id] ? servicesById[a.service_id].name : "Услуга"; });
+
+  const visits = groupEmployeeAppointmentsByVisit(data);
+
   container.innerHTML = "";
 
   const today = empTodayDateString(0);
 
-  data.forEach((appointment, index) => {
+  visits.forEach((visit, index) => {
 
     const card = document.createElement("div");
     card.className = "card";
@@ -161,28 +165,28 @@ async function loadEmployeeAppointments(){
       card.style.marginTop = "20px";
     }
 
-    const serviceName = servicesById[appointment.service_id] ? servicesById[appointment.service_id].name : "Услуга";
+    const servicesText = visit.rows.map(r => r.service_name).join(", ");
 
     card.innerHTML = `
-      <h2>${empFormatDate(appointment.date)} — ${empFormatTime(appointment.start_time)}</h2>
+      <h2>${empFormatDate(visit.date)} — ${empFormatTime(visit.start_time)}</h2>
 
-      <p><strong>Клиент:</strong><br>${appointment.booked_for_name}</p>
+      <p><strong>Клиент:</strong><br>${visit.booked_for_name}</p>
 
-      ${appointment.booked_for_phone ? `<p><strong>Телефон:</strong><br>${appointment.booked_for_phone}</p>` : ""}
+      ${visit.booked_for_phone ? `<p><strong>Телефон:</strong><br>${visit.booked_for_phone}</p>` : ""}
 
-      <p><strong>Услуга:</strong><br>${serviceName}</p>
+      <p><strong>Услуги:</strong><br>${servicesText}</p>
 
-      <p><strong>Статус:</strong><br>${EMP_STATUS_LABELS[appointment.status] || appointment.status}</p>
+      <p><strong>Статус:</strong><br>${EMP_STATUS_LABELS[visit.status] || visit.status}</p>
     `;
 
-    if(appointment.status === "booked" && appointment.date <= today){
+    if(visit.status === "booked" && visit.date <= today){
 
       const completeBtn = document.createElement("button");
       completeBtn.className = "btn";
       completeBtn.type = "button";
       completeBtn.textContent = "Завершить";
       completeBtn.style.marginTop = "10px";
-      completeBtn.addEventListener("click", () => updateAppointmentStatus(appointment.id, "completed"));
+      completeBtn.addEventListener("click", () => updateAppointmentStatus(visit.ids, "completed"));
 
       const noShowBtn = document.createElement("button");
       noShowBtn.className = "btn btn-danger";
@@ -190,7 +194,7 @@ async function loadEmployeeAppointments(){
       noShowBtn.textContent = "Клиент не пришёл";
       noShowBtn.style.marginTop = "10px";
       noShowBtn.style.marginLeft = "10px";
-      noShowBtn.addEventListener("click", () => updateAppointmentStatus(appointment.id, "no_show"));
+      noShowBtn.addEventListener("click", () => updateAppointmentStatus(visit.ids, "no_show"));
 
       card.appendChild(completeBtn);
       card.appendChild(noShowBtn);
@@ -201,12 +205,47 @@ async function loadEmployeeAppointments(){
 }
 
 
-async function updateAppointmentStatus(appointmentId, newStatus){
+// Группирует строки одного визита (несколько услуг, записанных
+// вместе через booking_group_id) для отображения одной карточкой.
+function groupEmployeeAppointmentsByVisit(rows){
+
+  const groups = {};
+
+  rows.forEach(row => {
+
+    const key = row.booking_group_id || `single-${row.id}`;
+
+    if(!groups[key]){
+      groups[key] = {
+        ids: [row.id],
+        rows: [row],
+        date: row.date,
+        start_time: row.start_time,
+        end_time: row.end_time,
+        status: row.status,
+        booked_for_name: row.booked_for_name,
+        booked_for_phone: row.booked_for_phone
+      };
+      return;
+    }
+
+    const g = groups[key];
+    g.ids.push(row.id);
+    g.rows.push(row);
+    if(row.start_time < g.start_time) g.start_time = row.start_time;
+    if(row.end_time > g.end_time) g.end_time = row.end_time;
+  });
+
+  return Object.values(groups).sort((a, b) => (a.date + a.start_time).localeCompare(b.date + b.start_time));
+}
+
+
+async function updateAppointmentStatus(appointmentIds, newStatus){
 
   const {error} = await supabaseClient
     .from("appointments")
     .update({status: newStatus})
-    .eq("id", appointmentId)
+    .in("id", appointmentIds)
     .eq("employee_id", employeeId);
 
   if(error){
@@ -365,6 +404,32 @@ async function showClientDetails(client){
     </div>
 
     <div class="card" style="margin-top:20px;">
+      <h2>Записать на приём</h2>
+
+      <form onsubmit="return false;">
+        <label>Услуга</label>
+        <select id="staffBookingService">
+          <option>Загрузка...</option>
+        </select>
+
+        <label style="margin-top:10px;">Дата</label>
+        <input type="date" id="staffBookingDate">
+      </form>
+
+      <p id="staffBookingMasterInfo" class="booking-message" style="display:none; margin-top:10px;"></p>
+
+      <div id="staffBookingSlots" class="slots-container" style="margin-top:10px;">
+        <p>Выберите услугу и дату</p>
+      </div>
+
+      <p id="staffBookingMessage" class="booking-message" style="display:none;"></p>
+
+      <button class="btn" type="button" id="staffBookingSubmitBtn" style="margin-top:15px;">
+      Записать
+      </button>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
       <h2>Медицинская информация</h2>
       <h3>Противопоказания, операции, травмы, аллергии</h3>
       <p>${(clientProfile && clientProfile.contraindications) ? clientProfile.contraindications : "Данные не заполнены."}</p>
@@ -394,6 +459,8 @@ async function showClientDetails(client){
   `;
 
   document.getElementById("saveNoteBtn").addEventListener("click", saveClientNote);
+
+  await initStaffBooking(client);
 }
 
 
@@ -680,4 +747,284 @@ async function loadUpcomingAppointmentsPreview(){
     row.innerHTML = `<strong>${empFormatDate(a.date)}, ${empFormatTime(a.start_time)}</strong> — ${a.booked_for_name} (${serviceName})`;
     container.appendChild(row);
   });
+}
+
+
+// =====================================
+// Запись клиента на приём сотрудником/админом
+// =====================================
+
+let staffBookingServicesCache = [];
+let staffBookingSelectedTime = null;
+let staffBookingAssignedEmployeeId = null;
+
+function staffBookingTodayDateString(){
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function staffTimeToMinutes(timeStr){
+  const parts = timeStr.split(":");
+  return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+}
+
+function staffMinutesToTimeString(totalMinutes){
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  return String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0") + ":00";
+}
+
+function staffMinutesToDisplay(totalMinutes){
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  return String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
+}
+
+function staffBookingShowMessage(text, isError){
+  const box = document.getElementById("staffBookingMessage");
+  if(!box) return;
+  box.textContent = text;
+  box.style.display = text ? "block" : "none";
+  box.style.color = isError ? "#b02a2a" : "#173f35";
+}
+
+function staffBookingShowMasterInfo(text){
+  const box = document.getElementById("staffBookingMasterInfo");
+  if(!box) return;
+  box.textContent = text;
+  box.style.display = text ? "block" : "none";
+}
+
+
+async function initStaffBooking(client){
+
+  const dateInput = document.getElementById("staffBookingDate");
+  if(!dateInput) return;
+
+  dateInput.min = staffBookingTodayDateString();
+  dateInput.value = staffBookingTodayDateString();
+
+  if(staffBookingServicesCache.length === 0){
+    const {data} = await supabaseClient
+      .from("services")
+      .select("id, name, duration_minutes, price")
+      .eq("is_active", true)
+      .order("name");
+    staffBookingServicesCache = data || [];
+  }
+
+  const select = document.getElementById("staffBookingService");
+  select.innerHTML = "";
+  staffBookingServicesCache.forEach(s => {
+    const option = document.createElement("option");
+    option.value = s.id;
+    option.textContent = `${s.name} — ${s.duration_minutes} мин, ${s.price} ₽`;
+    select.appendChild(option);
+  });
+
+  select.addEventListener("change", () => refreshStaffSlots(client));
+  dateInput.addEventListener("change", () => refreshStaffSlots(client));
+
+  document.getElementById("staffBookingSubmitBtn").addEventListener("click", () => submitStaffBooking(client));
+
+  await refreshStaffSlots(client);
+}
+
+
+function staffOverlaps(startA, endA, startB, endB){
+  return startA < endB && endA > startB;
+}
+
+
+async function refreshStaffSlots(client){
+
+  staffBookingSelectedTime = null;
+  staffBookingAssignedEmployeeId = null;
+
+  const container = document.getElementById("staffBookingSlots");
+  container.innerHTML = "";
+  staffBookingShowMessage("", false);
+  staffBookingShowMasterInfo("");
+
+  const serviceId = document.getElementById("staffBookingService").value;
+  const date = document.getElementById("staffBookingDate").value;
+
+  if(!serviceId || !date){
+    return;
+  }
+
+  const service = staffBookingServicesCache.find(s => String(s.id) === String(serviceId));
+  if(!service){
+    return;
+  }
+
+  container.innerHTML = `<p>Загрузка...</p>`;
+
+  const {data: holidayRows} = await supabaseClient
+    .from("holidays")
+    .select("id, reason")
+    .eq("date", date);
+
+  if(holidayRows && holidayRows.length > 0){
+    container.innerHTML = "";
+    staffBookingShowMessage("В этот день салон не работает" + (holidayRows[0].reason ? ` (${holidayRows[0].reason})` : ""), true);
+    return;
+  }
+
+  const salonSettings = await fetchSalonSettings();
+  const workDays = (salonSettings.work_days || "1,2,3,4,5,6").split(",").map(n => parseInt(n, 10));
+  const [y, m, d] = date.split("-").map(n => parseInt(n, 10));
+  const jsDay = new Date(y, m - 1, d).getDay();
+  const isoDay = jsDay === 0 ? 7 : jsDay;
+
+  if(!workDays.includes(isoDay)){
+    container.innerHTML = "";
+    staffBookingShowMessage("В этот день недели салон не работает.", true);
+    return;
+  }
+
+  const {data: scheduleRow} = await supabaseClient
+    .from("employee_schedule")
+    .select("employee_id, start_time, end_time")
+    .eq("date", date)
+    .maybeSingle();
+
+  if(!scheduleRow){
+    container.innerHTML = "";
+    staffBookingShowMessage("На эту дату мастер не назначен администратором.", true);
+    return;
+  }
+
+  const {data: masterProfile} = await supabaseClient
+    .from("profiles")
+    .select("first_name, last_name")
+    .eq("id", scheduleRow.employee_id)
+    .maybeSingle();
+
+  staffBookingAssignedEmployeeId = scheduleRow.employee_id;
+  staffBookingShowMasterInfo(`Мастер дня: ${masterProfile ? masterProfile.first_name + " " + masterProfile.last_name : "—"}`);
+
+  const {data: busyRows, error: busyError} = await supabaseClient
+    .from("appointments")
+    .select("start_time, end_time")
+    .eq("employee_id", scheduleRow.employee_id)
+    .eq("date", date)
+    .neq("status", "cancelled");
+
+  if(busyError){
+    container.innerHTML = "";
+    staffBookingShowMessage("Не удалось проверить занятость: " + busyError.message, true);
+    return;
+  }
+
+  const busy = (busyRows || []).map(r => ({
+    start: staffTimeToMinutes(r.start_time),
+    end: staffTimeToMinutes(r.end_time)
+  }));
+
+  const duration = service.duration_minutes;
+  const today = staffBookingTodayDateString();
+  const isToday = date === today;
+  const nowMinutes = isToday ? (new Date().getHours() * 60 + new Date().getMinutes()) : -1;
+
+  const salonWorkStart = staffTimeToMinutes(salonSettings.work_start || "10:00:00");
+  const salonWorkEnd = staffTimeToMinutes(salonSettings.work_end || "20:00:00");
+
+  const windowStart = Math.max(staffTimeToMinutes(scheduleRow.start_time), salonWorkStart);
+  const windowEnd = Math.min(staffTimeToMinutes(scheduleRow.end_time), salonWorkEnd);
+
+  const slots = [];
+
+  for(let start = windowStart; start + duration <= windowEnd; start += 30){
+    const end = start + duration;
+    if(isToday && start <= nowMinutes){
+      continue;
+    }
+    if(busy.some(b => staffOverlaps(start, end, b.start, b.end))){
+      continue;
+    }
+    slots.push(start);
+  }
+
+  container.innerHTML = "";
+
+  if(slots.length === 0){
+    staffBookingShowMessage("Нет свободных слотов на выбранную дату.", true);
+    return;
+  }
+
+  slots.forEach(startMinutes => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "slot-btn";
+    btn.textContent = staffMinutesToDisplay(startMinutes);
+    btn.addEventListener("click", () => {
+      staffBookingSelectedTime = startMinutes;
+      container.querySelectorAll(".slot-btn").forEach(b => b.classList.remove("slot-btn-active"));
+      btn.classList.add("slot-btn-active");
+    });
+    container.appendChild(btn);
+  });
+}
+
+
+async function submitStaffBooking(client){
+
+  const serviceId = document.getElementById("staffBookingService").value;
+  const date = document.getElementById("staffBookingDate").value;
+
+  if(!serviceId || !date || !staffBookingAssignedEmployeeId){
+    staffBookingShowMessage("Выберите услугу, дату и мастера", true);
+    return;
+  }
+
+  if(staffBookingSelectedTime === null){
+    staffBookingShowMessage("Выберите время", true);
+    return;
+  }
+
+  const service = staffBookingServicesCache.find(s => String(s.id) === String(serviceId));
+  const startTimeStr = staffMinutesToTimeString(staffBookingSelectedTime);
+  const endTimeStr = staffMinutesToTimeString(staffBookingSelectedTime + service.duration_minutes);
+
+  const btn = document.getElementById("staffBookingSubmitBtn");
+  btn.disabled = true;
+  btn.textContent = "Записываем...";
+
+  const {data: {user}} = await supabaseClient.auth.getUser();
+
+  const {error} = await supabaseClient
+    .from("appointments")
+    .insert({
+      client_id: client.id,
+      booked_for_name: `${client.last_name} ${client.first_name}`,
+      booked_for_phone: client.phone || null,
+      service_id: serviceId,
+      employee_id: staffBookingAssignedEmployeeId,
+      date: date,
+      start_time: startTimeStr,
+      end_time: endTimeStr,
+      status: "booked",
+      created_by: user.id,
+      final_price: service.price
+    });
+
+  btn.disabled = false;
+  btn.textContent = "Записать";
+
+  if(error){
+    if(error.code === "23P01"){
+      staffBookingShowMessage("Это время уже занято. Выберите другое.", true);
+      await refreshStaffSlots(client);
+      return;
+    }
+    staffBookingShowMessage("Не удалось создать запись: " + error.message, true);
+    return;
+  }
+
+  showToast("Клиент записан на приём", "success");
+  await refreshStaffSlots(client);
 }

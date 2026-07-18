@@ -56,12 +56,118 @@ async function initAdminSchedule(){
   await loadScheduleEmployees();
   await loadSchedule();
   await loadShiftStats();
+  await loadHolidaysList();
 
   document.getElementById("assignBtn").addEventListener("click", assignFromForm);
+  document.getElementById("addHolidayBtn").addEventListener("click", addHoliday);
 
   const dateInput = document.getElementById("assignDate");
   dateInput.min = scheduleDateString(0);
   dateInput.value = scheduleDateString(0);
+
+  const holidayDateInput = document.getElementById("holidayDate");
+  holidayDateInput.min = scheduleDateString(0);
+  holidayDateInput.value = scheduleDateString(0);
+}
+
+
+async function loadHolidaysList(){
+
+  const container = document.getElementById("holidaysListContainer");
+  container.innerHTML = `<p>Загрузка...</p>`;
+
+  const {data, error} = await supabaseClient
+    .from("holidays")
+    .select("id, date, reason")
+    .gte("date", scheduleDateString(0))
+    .order("date", {ascending: true});
+
+  if(error){
+    container.innerHTML = `<p>Не удалось загрузить выходные: ${error.message}</p>`;
+    return;
+  }
+
+  if(!data || data.length === 0){
+    container.innerHTML = `<p>Ближайших выходных дней не назначено.</p>`;
+    return;
+  }
+
+  container.innerHTML = "";
+
+  data.forEach((holiday, index) => {
+
+    const row = document.createElement("div");
+    row.className = "card";
+    if(index > 0){
+      row.style.marginTop = "10px";
+    }
+
+    row.innerHTML = `
+      <strong>${scheduleFormatDate(holiday.date)}</strong>
+      ${holiday.reason ? ` — ${holiday.reason}` : ""}
+    `;
+
+    const removeBtn = document.createElement("button");
+    removeBtn.className = "btn btn-danger";
+    removeBtn.type = "button";
+    removeBtn.style.marginLeft = "15px";
+    removeBtn.textContent = "Убрать";
+    removeBtn.addEventListener("click", () => removeHoliday(holiday.id));
+
+    row.appendChild(removeBtn);
+    container.appendChild(row);
+  });
+}
+
+
+async function addHoliday(){
+
+  const date = document.getElementById("holidayDate").value;
+  const reason = document.getElementById("holidayReason").value.trim();
+
+  if(!date){
+    showToast("Укажите дату", "error");
+    return;
+  }
+
+  const {error} = await supabaseClient
+    .from("holidays")
+    .insert({date: date, reason: reason || null});
+
+  if(error){
+    if(error.code === "23505"){
+      showToast("Этот день уже отмечен как выходной", "error");
+    }else{
+      showToast("Не удалось добавить выходной: " + error.message, "error");
+    }
+    return;
+  }
+
+  showToast("Выходной день добавлен", "success");
+  document.getElementById("holidayReason").value = "";
+  await loadHolidaysList();
+}
+
+
+async function removeHoliday(holidayId){
+
+  const confirmed = await showConfirm("Убрать этот выходной день?");
+  if(!confirmed){
+    return;
+  }
+
+  const {error} = await supabaseClient
+    .from("holidays")
+    .delete()
+    .eq("id", holidayId);
+
+  if(error){
+    showToast("Не удалось убрать выходной: " + error.message, "error");
+    return;
+  }
+
+  showToast("Выходной день убран", "success");
+  await loadHolidaysList();
 }
 
 
@@ -143,22 +249,37 @@ async function loadSchedule(){
   scheduleRowsByDate = {};
   (data || []).forEach(row => { scheduleRowsByDate[row.date] = row; });
 
+  const {data: holidayRows} = await supabaseClient
+    .from("holidays")
+    .select("date, reason")
+    .gte("date", fromDate)
+    .lte("date", toDate);
+
+  const holidaysByDate = {};
+  (holidayRows || []).forEach(h => { holidaysByDate[h.date] = h; });
+
   container.innerHTML = "";
 
   for(let offset = 0; offset <= SCHEDULE_DAYS_AHEAD; offset++){
 
     const date = scheduleDateString(offset);
     const row = scheduleRowsByDate[date];
+    const holiday = holidaysByDate[date];
 
     const dayCard = document.createElement("div");
     dayCard.className = "card schedule-day";
+    if(holiday){
+      dayCard.classList.add("danger-zone");
+    }
     if(offset > 0){
       dayCard.style.marginTop = "10px";
     }
 
-    const assignedText = row
-      ? `${employeeNameById(row.employee_id)} (${row.start_time.slice(0,5)}–${row.end_time.slice(0,5)})`
-      : "Не назначен";
+    const assignedText = holiday
+      ? `Выходной${holiday.reason ? ` (${holiday.reason})` : ""}`
+      : row
+        ? `${employeeNameById(row.employee_id)} (${row.start_time.slice(0,5)}–${row.end_time.slice(0,5)})`
+        : "Не назначен";
 
     dayCard.innerHTML = `
       <div class="schedule-day-row">
@@ -168,6 +289,11 @@ async function loadSchedule(){
         </div>
       </div>
     `;
+
+    if(holiday){
+      container.appendChild(dayCard);
+      continue;
+    }
 
     const actions = document.createElement("div");
     actions.className = "schedule-day-actions";

@@ -74,6 +74,47 @@ async function attachServiceAndEmployeeNames(appointments){
 }
 
 
+// Группирует строки appointments, относящиеся к одному визиту
+// (несколько услуг, записанных вместе через booking_group_id),
+// в один логический "визит" для отображения.
+function groupAppointmentsByVisit(rows){
+
+  const groups = {};
+
+  rows.forEach(row => {
+
+    const key = row.booking_group_id || `single-${row.id}`;
+
+    if(!groups[key]){
+      groups[key] = {
+        groupId: key,
+        ids: [row.id],
+        rows: [row],
+        date: row.date,
+        start_time: row.start_time,
+        end_time: row.end_time,
+        status: row.status,
+        booked_for_name: row.booked_for_name,
+        booked_for_phone: row.booked_for_phone,
+        employee_id: row.employee_id,
+        employee_name: row.employee_name,
+        auto_closed: !!row.auto_closed
+      };
+      return;
+    }
+
+    const g = groups[key];
+    g.ids.push(row.id);
+    g.rows.push(row);
+    if(row.start_time < g.start_time) g.start_time = row.start_time;
+    if(row.end_time > g.end_time) g.end_time = row.end_time;
+    if(row.auto_closed) g.auto_closed = true;
+  });
+
+  return Object.values(groups).sort((a, b) => (a.date + a.start_time).localeCompare(b.date + b.start_time));
+}
+
+
 // ---------- Виджет "Ближайшая запись" на дашборде ----------
 
 async function initNearestAppointmentWidget(){
@@ -93,13 +134,13 @@ async function initNearestAppointmentWidget(){
 
   const {data, error} = await supabaseClient
     .from("appointments")
-    .select("id, service_id, employee_id, date, start_time, end_time, status")
+    .select("id, service_id, employee_id, date, start_time, end_time, status, booking_group_id")
     .eq("client_id", user.id)
     .neq("status", "cancelled")
     .gte("date", today)
     .order("date", {ascending: true})
     .order("start_time", {ascending: true})
-    .limit(1);
+    .limit(10);
 
   if(error || !data || data.length === 0){
     return;
@@ -107,21 +148,25 @@ async function initNearestAppointmentWidget(){
 
   await attachServiceAndEmployeeNames(data);
 
-  const appointment = data[0];
+  const visits = groupAppointmentsByVisit(data);
+  const visit = visits[0];
 
-  const masterText = appointment.employee_id
-    ? ` у мастера ${appointment.employee_name}`
+  const servicesText = visit.rows.map(r => r.service_name).join(", ");
+
+  const masterText = visit.employee_id
+    ? ` у мастера ${visit.employee_name}`
     : "";
 
   container.innerHTML = `
     <p>
-      <strong>${formatDateRu(appointment.date)}</strong>,
-      ${formatTimeShort(appointment.start_time)}
-      — ${appointment.service_name}${masterText}
+      <strong>${formatDateRu(visit.date)}</strong>,
+      ${formatTimeShort(visit.start_time)}
+      — ${servicesText}${masterText}
     </p>
 
     <a class="btn" href="appointments.html">
     Подробнее
+
     </a>
   `;
 }
@@ -177,7 +222,7 @@ async function renderUpcomingAppointments(){
 
   const {data, error} = await supabaseClient
     .from("appointments")
-    .select("id, service_id, employee_id, date, start_time, end_time, status, booked_for_name")
+    .select("id, service_id, employee_id, date, start_time, end_time, status, booked_for_name, booking_group_id")
     .eq("client_id", user.id)
     .neq("status", "cancelled")
     .gte("date", today)
@@ -196,9 +241,11 @@ async function renderUpcomingAppointments(){
 
   await attachServiceAndEmployeeNames(data);
 
+  const groups = groupAppointmentsByVisit(data);
+
   container.innerHTML = "";
 
-  data.forEach((appointment, index) => {
+  groups.forEach((visit, index) => {
 
     const card = document.createElement("div");
     card.className = "card";
@@ -206,26 +253,28 @@ async function renderUpcomingAppointments(){
       card.style.marginTop = "30px";
     }
 
+    const servicesText = visit.rows.map(r => r.service_name).join(", ");
+
     card.innerHTML = `
       <h2>${index === 0 ? "Ближайшая запись" : "Предстоящая запись"}</h2>
 
-      <p><strong>Дата:</strong><br>${formatDateRu(appointment.date)}</p>
+      <p><strong>Дата:</strong><br>${formatDateRu(visit.date)}</p>
 
-      <p><strong>Время:</strong><br>${formatTimeShort(appointment.start_time)} — ${formatTimeShort(appointment.end_time)}</p>
+      <p><strong>Время:</strong><br>${formatTimeShort(visit.start_time)} — ${formatTimeShort(visit.end_time)}</p>
 
-      <p><strong>Услуга:</strong><br>${appointment.service_name}</p>
+      <p><strong>Услуги:</strong><br>${servicesText}</p>
 
-      <p><strong>Мастер:</strong><br>${appointment.employee_name}</p>
+      <p><strong>Мастер:</strong><br>${visit.employee_name}</p>
 
-      <p><strong>Записан(а):</strong><br>${appointment.booked_for_name}</p>
+      <p><strong>Записан(а):</strong><br>${visit.booked_for_name}</p>
 
-      <p><strong>Статус:</strong><br><span>${statusLabel(appointment.status)}</span></p>
+      <p><strong>Статус:</strong><br><span>${statusLabel(visit.status)}</span></p>
     `;
 
     const cancelBtn = document.createElement("button");
     cancelBtn.className = "btn";
     cancelBtn.textContent = "Отменить запись";
-    cancelBtn.addEventListener("click", () => cancelAppointment(appointment.id));
+    cancelBtn.addEventListener("click", () => cancelAppointment(visit.ids));
 
     card.appendChild(cancelBtn);
     container.appendChild(card);
@@ -233,7 +282,7 @@ async function renderUpcomingAppointments(){
 }
 
 
-async function cancelAppointment(appointmentId){
+async function cancelAppointment(appointmentIds){
 
   const confirmed = await showConfirm("Отменить эту запись?");
   if(!confirmed){
@@ -245,7 +294,7 @@ async function cancelAppointment(appointmentId){
   const {error} = await supabaseClient
     .from("appointments")
     .update({status: "cancelled"})
-    .eq("id", appointmentId)
+    .in("id", appointmentIds)
     .eq("client_id", user.id);
 
   if(error){
@@ -284,7 +333,7 @@ async function renderHistory(){
 
   const {data, error} = await supabaseClient
     .from("appointments")
-    .select("id, service_id, employee_id, date, start_time, status")
+    .select("id, service_id, employee_id, date, start_time, status, booking_group_id")
     .eq("client_id", user.id)
     .neq("status", "cancelled")
     .lt("date", today)
@@ -303,6 +352,8 @@ async function renderHistory(){
 
   await attachServiceAndEmployeeNames(data);
 
+  const visits = groupAppointmentsByVisit(data);
+
   const appointmentIds = data.map(a => a.id);
 
   const {data: reviewRows, error: reviewError} = await supabaseClient
@@ -319,7 +370,7 @@ async function renderHistory(){
 
   container.innerHTML = "";
 
-  data.forEach((appointment, index) => {
+  visits.forEach((visit, index) => {
 
     const card = document.createElement("div");
     card.className = "card";
@@ -327,17 +378,20 @@ async function renderHistory(){
       card.style.marginTop = "30px";
     }
 
+    const servicesText = visit.rows.map(r => r.service_name).join(", ");
+    const representativeId = visit.ids[0];
+
     card.innerHTML = `
-      <h2>${appointment.service_name}</h2>
+      <h2>${servicesText}</h2>
 
-      <p><strong>Дата:</strong><br>${formatDateRu(appointment.date)}</p>
+      <p><strong>Дата:</strong><br>${formatDateRu(visit.date)}</p>
 
-      <p><strong>Мастер:</strong><br>${appointment.employee_name}</p>
+      <p><strong>Мастер:</strong><br>${visit.employee_name}</p>
 
-      <p><strong>Статус:</strong><br>${statusLabel(appointment.status)}</p>
+      <p><strong>Статус:</strong><br>${statusLabel(visit.status)}</p>
     `;
 
-    const review = reviewsByAppointment[appointment.id];
+    const review = reviewsByAppointment[representativeId];
 
     const reviewBlock = document.createElement("div");
     reviewBlock.style.marginTop = "15px";
@@ -352,7 +406,7 @@ async function renderHistory(){
     }else{
 
       const ratingSelect = document.createElement("select");
-      ratingSelect.id = `rating-${appointment.id}`;
+      ratingSelect.id = `rating-${representativeId}`;
       [5, 4, 3, 2, 1].forEach(n => {
         const opt = document.createElement("option");
         opt.value = n;
@@ -361,7 +415,7 @@ async function renderHistory(){
       });
 
       const commentInput = document.createElement("textarea");
-      commentInput.id = `comment-${appointment.id}`;
+      commentInput.id = `comment-${representativeId}`;
       commentInput.rows = 3;
       commentInput.placeholder = "Расскажите о своих впечатлениях (необязательно)";
       commentInput.style.width = "100%";
@@ -372,7 +426,7 @@ async function renderHistory(){
       submitBtn.type = "button";
       submitBtn.textContent = "Оставить отзыв";
       submitBtn.style.marginTop = "8px";
-      submitBtn.addEventListener("click", () => leaveReview(appointment.id, ratingSelect.value, commentInput.value.trim()));
+      submitBtn.addEventListener("click", () => leaveReview(representativeId, ratingSelect.value, commentInput.value.trim()));
 
       const label = document.createElement("p");
       label.innerHTML = "<strong>Оценить визит:</strong>";

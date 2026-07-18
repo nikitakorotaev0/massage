@@ -103,7 +103,7 @@ async function loadAdminAppointments(){
 
   let query = supabaseClient
     .from("appointments")
-    .select("id, service_id, employee_id, date, start_time, end_time, status, booked_for_name, booked_for_phone, auto_closed")
+    .select("id, service_id, employee_id, date, start_time, end_time, status, booked_for_name, booked_for_phone, auto_closed, booking_group_id")
     .neq("status", "cancelled")
     .order("date", {ascending: true})
     .order("start_time", {ascending: true});
@@ -147,45 +147,49 @@ async function loadAdminAppointments(){
     (profileRows || []).forEach(p => { profilesById[p.id] = p; });
   }
 
+  data.forEach(a => { a.service_name = servicesById[a.service_id] ? servicesById[a.service_id].name : "Услуга"; });
+
+  const visits = groupAdminAppointmentsByVisit(data);
+
   container.innerHTML = "";
 
-  data.forEach((a, index) => {
+  visits.forEach((visit, index) => {
 
     const card = document.createElement("div");
     card.className = "card";
-    if(a.auto_closed){
+    if(visit.auto_closed){
       card.classList.add("danger-zone");
     }
     if(index > 0){
       card.style.marginTop = "20px";
     }
 
-    const serviceName = servicesById[a.service_id] ? servicesById[a.service_id].name : "Услуга";
-    const employeeName = profilesById[a.employee_id] ? `${profilesById[a.employee_id].first_name} ${profilesById[a.employee_id].last_name}` : "—";
+    const servicesText = visit.rows.map(r => r.service_name).join(", ");
+    const employeeName = profilesById[visit.employee_id] ? `${profilesById[visit.employee_id].first_name} ${profilesById[visit.employee_id].last_name}` : "—";
 
     card.innerHTML = `
-      <h2>${adminApptFormatDate(a.date)} — ${a.start_time.slice(0,5)}</h2>
+      <h2>${adminApptFormatDate(visit.date)} — ${visit.start_time.slice(0,5)}</h2>
 
-      <p><strong>Клиент:</strong><br>${a.booked_for_name}</p>
+      <p><strong>Клиент:</strong><br>${visit.booked_for_name}</p>
 
-      ${a.booked_for_phone ? `<p><strong>Телефон:</strong><br>${a.booked_for_phone}</p>` : ""}
+      ${visit.booked_for_phone ? `<p><strong>Телефон:</strong><br>${visit.booked_for_phone}</p>` : ""}
 
-      <p><strong>Услуга:</strong><br>${serviceName}</p>
+      <p><strong>Услуги:</strong><br>${servicesText}</p>
 
       <p><strong>Мастер:</strong><br>${employeeName}</p>
 
-      <p><strong>Статус:</strong><br>${ADMIN_APPT_STATUS_LABELS[a.status] || a.status}</p>
+      <p><strong>Статус:</strong><br>${ADMIN_APPT_STATUS_LABELS[visit.status] || visit.status}</p>
 
-      ${a.auto_closed ? `<p><strong>⚠ Не подтверждено сотрудником</strong><br>Запись закрылась автоматически по истечении времени.</p>` : ""}
+      ${visit.auto_closed ? `<p><strong>⚠ Не подтверждено сотрудником</strong><br>Запись закрылась автоматически по истечении времени.</p>` : ""}
     `;
 
-    if(a.status === "booked"){
+    if(visit.status === "booked"){
       const cancelBtn = document.createElement("button");
       cancelBtn.className = "btn btn-danger";
       cancelBtn.type = "button";
       cancelBtn.style.marginTop = "10px";
       cancelBtn.textContent = "Отменить запись";
-      cancelBtn.addEventListener("click", () => cancelAppointmentAsAdmin(a.id));
+      cancelBtn.addEventListener("click", () => cancelAppointmentAsAdmin(visit.ids));
       card.appendChild(cancelBtn);
     }
 
@@ -194,7 +198,44 @@ async function loadAdminAppointments(){
 }
 
 
-async function cancelAppointmentAsAdmin(appointmentId){
+// Группирует строки одного визита (несколько услуг через booking_group_id)
+function groupAdminAppointmentsByVisit(rows){
+
+  const groups = {};
+
+  rows.forEach(row => {
+
+    const key = row.booking_group_id || `single-${row.id}`;
+
+    if(!groups[key]){
+      groups[key] = {
+        ids: [row.id],
+        rows: [row],
+        date: row.date,
+        start_time: row.start_time,
+        end_time: row.end_time,
+        status: row.status,
+        booked_for_name: row.booked_for_name,
+        booked_for_phone: row.booked_for_phone,
+        employee_id: row.employee_id,
+        auto_closed: !!row.auto_closed
+      };
+      return;
+    }
+
+    const g = groups[key];
+    g.ids.push(row.id);
+    g.rows.push(row);
+    if(row.start_time < g.start_time) g.start_time = row.start_time;
+    if(row.end_time > g.end_time) g.end_time = row.end_time;
+    if(row.auto_closed) g.auto_closed = true;
+  });
+
+  return Object.values(groups).sort((a, b) => (a.date + a.start_time).localeCompare(b.date + b.start_time));
+}
+
+
+async function cancelAppointmentAsAdmin(appointmentIds){
 
   const confirmed = await showConfirm("Отменить эту запись?");
   if(!confirmed){
@@ -204,7 +245,7 @@ async function cancelAppointmentAsAdmin(appointmentId){
   const {error} = await supabaseClient
     .from("appointments")
     .update({status: "cancelled"})
-    .eq("id", appointmentId);
+    .in("id", appointmentIds);
 
   if(error){
     showToast("Не удалось отменить запись: " + error.message, "error");

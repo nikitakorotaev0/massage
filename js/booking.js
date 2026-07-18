@@ -85,16 +85,89 @@ async function initBooking(){
 
   await loadServices();
 
-  document.getElementById("serviceSelect").addEventListener("change", () => {
-    clearAppliedPromo();
-    refreshSlots();
-  });
+  document.getElementById("serviceSelect").addEventListener("change", onServiceSelectionChanged);
   dateInput.addEventListener("change", refreshSlots);
+
+  document.getElementById("addServiceBtn").addEventListener("click", addServiceRow);
 
   document.getElementById("applyPromoBtn").addEventListener("click", applyPromoCode);
   document.getElementById("submitBookingBtn").addEventListener("click", submitBooking);
 
   await refreshSlots();
+}
+
+
+function onServiceSelectionChanged(){
+  clearAppliedPromo();
+  refreshSlots();
+}
+
+
+// ---------- Несколько услуг в одной записи ----------
+
+let additionalServiceRowCounter = 0;
+
+function getSelectedServices(){
+
+  const services = [];
+
+  const firstId = document.getElementById("serviceSelect").value;
+  const firstService = servicesCache.find(s => String(s.id) === String(firstId));
+  if(firstService){
+    services.push(firstService);
+  }
+
+  document.querySelectorAll(".additional-service-select").forEach(select => {
+    const service = servicesCache.find(s => String(s.id) === String(select.value));
+    if(service){
+      services.push(service);
+    }
+  });
+
+  return services;
+}
+
+
+function addServiceRow(){
+
+  additionalServiceRowCounter++;
+  const rowId = `additional-service-row-${additionalServiceRowCounter}`;
+
+  const row = document.createElement("div");
+  row.id = rowId;
+  row.style.display = "flex";
+  row.style.gap = "10px";
+  row.style.marginTop = "10px";
+  row.style.alignItems = "center";
+
+  const select = document.createElement("select");
+  select.className = "additional-service-select";
+  select.style.flex = "1";
+
+  servicesCache.forEach(service => {
+    const option = document.createElement("option");
+    option.value = service.id;
+    option.textContent = `${service.name} — ${service.duration_minutes} мин, ${service.price} ₽`;
+    select.appendChild(option);
+  });
+
+  select.addEventListener("change", onServiceSelectionChanged);
+
+  const removeBtn = document.createElement("button");
+  removeBtn.type = "button";
+  removeBtn.className = "btn btn-danger";
+  removeBtn.textContent = "✕";
+  removeBtn.addEventListener("click", () => {
+    row.remove();
+    onServiceSelectionChanged();
+  });
+
+  row.appendChild(select);
+  row.appendChild(removeBtn);
+
+  document.getElementById("additionalServicesContainer").appendChild(row);
+
+  onServiceSelectionChanged();
 }
 
 
@@ -212,8 +285,8 @@ async function refreshSlots(){
     return;
   }
 
-  const service = servicesCache.find(s => String(s.id) === String(serviceId));
-  if(!service){
+  const selectedServices = getSelectedServices();
+  if(selectedServices.length === 0){
     return;
   }
 
@@ -283,7 +356,7 @@ async function refreshSlots(){
     return;
   }
 
-  const duration = service.duration_minutes;
+  const duration = selectedServices.reduce((sum, s) => sum + s.duration_minutes, 0);
   const isToday = date === todayDateString();
   const nowMinutes = isToday ? (new Date().getHours() * 60 + new Date().getMinutes()) : -1;
 
@@ -344,6 +417,13 @@ async function submitBooking(){
     return;
   }
 
+  const selectedServices = getSelectedServices();
+
+  if(selectedServices.length === 0){
+    showMessage("Выберите хотя бы одну услугу", true);
+    return;
+  }
+
   if(!assignedEmployeeId){
     showMessage("На эту дату мастер не назначен", true);
     return;
@@ -372,10 +452,7 @@ async function submitBooking(){
     bookedForPhone = currentProfile.phone || null;
   }
 
-  const service = servicesCache.find(s => String(s.id) === String(serviceId));
-  const duration = service.duration_minutes;
-  const startTimeStr = minutesToTimeString(selectedTime);
-  const endTimeStr = minutesToTimeString(selectedTime + duration);
+  const totalDuration = selectedServices.reduce((sum, s) => sum + s.duration_minutes, 0);
 
   const submitBtn = document.getElementById("submitBookingBtn");
   submitBtn.disabled = true;
@@ -385,10 +462,11 @@ async function submitBooking(){
 
     // Финальная проверка на занятость прямо перед отправкой —
     // снижает вероятность двойной записи, если кто-то другой
-    // забронировал это время параллельно.
+    // забронировал это время параллельно. Проверяем весь блок
+    // (все выбранные услуги подряд), а не только первую услугу.
     const busy = await getBusyIntervals(assignedEmployeeId, date);
     const newStart = selectedTime;
-    const newEnd = selectedTime + duration;
+    const newEnd = selectedTime + totalDuration;
     const stillFree = !busy.some(b => overlaps(newStart, newEnd, b.start, b.end));
 
     if(!stillFree){
@@ -398,9 +476,10 @@ async function submitBooking(){
     }
 
     let promoIdToSave = null;
-    let finalPrice = service.price;
 
-    if(appliedPromo){
+    // Промокод применим только при записи на одну услугу —
+    // при нескольких услугах промокод не используется.
+    if(appliedPromo && selectedServices.length === 1){
 
       // Перепроверяем промокод прямо перед вставкой — на случай,
       // если лимит использований исчерпался, пока клиент заполнял форму.
@@ -417,28 +496,46 @@ async function submitBooking(){
         return;
       }
 
-      finalPrice = computeFinalPrice(service);
       promoIdToSave = freshPromo.id;
     }
 
     const {data: {user}} = await supabaseClient.auth.getUser();
 
-    const {error} = await supabaseClient
-      .from("appointments")
-      .insert({
+    const groupId = crypto.randomUUID();
+
+    let cursor = selectedTime;
+    const rows = [];
+
+    selectedServices.forEach(service => {
+
+      const rowStart = cursor;
+      const rowEnd = cursor + service.duration_minutes;
+      cursor = rowEnd;
+
+      const rowFinalPrice = (promoIdToSave && selectedServices.length === 1)
+        ? computeFinalPrice(service)
+        : service.price;
+
+      rows.push({
         client_id: user.id,
         booked_for_name: bookedForName,
         booked_for_phone: bookedForPhone,
-        service_id: serviceId,
+        service_id: service.id,
         employee_id: assignedEmployeeId,
         date: date,
-        start_time: startTimeStr,
-        end_time: endTimeStr,
+        start_time: minutesToTimeString(rowStart),
+        end_time: minutesToTimeString(rowEnd),
         status: "booked",
         created_by: user.id,
         promo_id: promoIdToSave,
-        final_price: finalPrice
+        final_price: rowFinalPrice,
+        booking_group_id: groupId
       });
+    });
+
+    const {error} = await supabaseClient
+      .from("appointments")
+      .insert(rows);
 
     if(error){
 
@@ -508,23 +605,40 @@ function clearAppliedPromo(){
 function updatePriceDisplay(){
 
   const priceBox = document.getElementById("priceInfo");
-  const serviceId = document.getElementById("serviceSelect").value;
-  const service = servicesCache.find(s => String(s.id) === String(serviceId));
+  const selectedServices = getSelectedServices();
 
-  if(!service){
+  if(selectedServices.length === 0){
     priceBox.style.display = "none";
     return;
   }
 
-  const finalPrice = computeFinalPrice(service);
+  const promoSection = document.getElementById("promoSection");
+  const promoUnavailableNote = document.getElementById("promoUnavailableNote");
+
+  if(selectedServices.length > 1){
+    if(appliedPromo){
+      appliedPromo = null;
+    }
+    promoSection.style.display = "none";
+    promoUnavailableNote.style.display = "block";
+  }else{
+    promoSection.style.display = "block";
+    promoUnavailableNote.style.display = "none";
+  }
+
+  const totalBasePrice = selectedServices.reduce((sum, s) => sum + s.price, 0);
 
   priceBox.style.display = "block";
 
-  if(appliedPromo && finalPrice !== service.price){
-    priceBox.innerHTML = `Стоимость: <s>${service.price} ₽</s> <strong>${finalPrice} ₽</strong>`;
-  }else{
-    priceBox.innerHTML = `Стоимость: <strong>${service.price} ₽</strong>`;
+  if(selectedServices.length === 1 && appliedPromo){
+    const finalPrice = computeFinalPrice(selectedServices[0]);
+    if(finalPrice !== totalBasePrice){
+      priceBox.innerHTML = `Стоимость: <s>${totalBasePrice} ₽</s> <strong>${finalPrice} ₽</strong>`;
+      return;
+    }
   }
+
+  priceBox.innerHTML = `Стоимость: <strong>${totalBasePrice} ₽</strong>`;
 }
 
 function computeFinalPrice(service){
@@ -555,13 +669,14 @@ async function applyPromoCode(){
     return;
   }
 
-  const serviceId = document.getElementById("serviceSelect").value;
-  const service = servicesCache.find(s => String(s.id) === String(serviceId));
+  const selectedServices = getSelectedServices();
 
-  if(!service){
-    showPromoMessage("Сначала выберите услугу", true);
+  if(selectedServices.length !== 1){
+    showPromoMessage("Промокод можно применить только при записи на одну услугу", true);
     return;
   }
+
+  const service = selectedServices[0];
 
   const {data: promo, error} = await supabaseClient
     .from("promo_codes")

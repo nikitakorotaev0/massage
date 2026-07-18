@@ -70,6 +70,12 @@
 <option>Загрузка...</option>
 </select>
 
+<div id="additionalServicesContainer"></div>
+
+<button class="btn" type="button" id="addServiceBtn" style="margin-top:10px;">
++ Добавить услугу
+</button>
+
 
 <h2 style="margin-top:30px;">
 Дата посещения
@@ -93,10 +99,16 @@
 Промокод
 </h2>
 
+<div id="promoSection">
 <div style="display:flex; gap:10px; flex-wrap:wrap;">
 <input type="text" id="promoCodeInput" placeholder="Введите промокод" style="flex:1; min-width:180px; text-transform:uppercase;">
 <button class="btn" type="button" id="applyPromoBtn">Применить</button>
 </div>
+</div>
+
+<p id="promoUnavailableNote" class="booking-message" style="display:none;">
+Промокод недоступен при записи на несколько услуг.
+</p>
 
 <p id="promoMessage" class="booking-message" style="display:none;"></p>
 

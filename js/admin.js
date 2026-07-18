@@ -561,7 +561,7 @@ async function loadTodayAppointmentsPreview(){
 
   const {data, error} = await supabaseClient
     .from("appointments")
-    .select("id, service_id, employee_id, start_time, status, booked_for_name, auto_closed")
+    .select("id, service_id, employee_id, start_time, status, booked_for_name, auto_closed, booking_group_id")
     .eq("date", today)
     .neq("status", "cancelled")
     .order("start_time", {ascending: true});
@@ -592,9 +592,25 @@ async function loadTodayAppointmentsPreview(){
     (profileRows || []).forEach(p => { profilesById[p.id] = p; });
   }
 
+  data.forEach(a => { a.service_name = servicesById[a.service_id] ? servicesById[a.service_id].name : "Услуга"; });
+
+  const groups = {};
+  data.forEach(row => {
+    const key = row.booking_group_id || `single-${row.id}`;
+    if(!groups[key]){
+      groups[key] = {...row, ids: [row.id], serviceNames: [row.service_name]};
+    }else{
+      groups[key].ids.push(row.id);
+      groups[key].serviceNames.push(row.service_name);
+      if(row.auto_closed) groups[key].auto_closed = true;
+    }
+  });
+
+  const visits = Object.values(groups).sort((a, b) => a.start_time.localeCompare(b.start_time));
+
   container.innerHTML = "";
 
-  data.forEach((a, index) => {
+  visits.forEach((visit, index) => {
 
     const card = document.createElement("div");
     card.className = "card";
@@ -602,15 +618,14 @@ async function loadTodayAppointmentsPreview(){
       card.style.marginTop = "15px";
     }
 
-    const serviceName = servicesById[a.service_id] ? servicesById[a.service_id].name : "Услуга";
-    const employeeName = profilesById[a.employee_id] ? `${profilesById[a.employee_id].first_name} ${profilesById[a.employee_id].last_name}` : "—";
+    const employeeName = profilesById[visit.employee_id] ? `${profilesById[visit.employee_id].first_name} ${profilesById[visit.employee_id].last_name}` : "—";
 
     card.innerHTML = `
-      <h3>${a.start_time.slice(0,5)} — ${a.booked_for_name}</h3>
-      <p><strong>Услуга:</strong><br>${serviceName}</p>
+      <h3>${visit.start_time.slice(0,5)} — ${visit.booked_for_name}</h3>
+      <p><strong>Услуги:</strong><br>${visit.serviceNames.join(", ")}</p>
       <p><strong>Мастер:</strong><br>${employeeName}</p>
-      <p><strong>Статус:</strong><br>${ADMIN_STATUS_LABELS[a.status] || a.status}</p>
-      ${a.auto_closed ? `<p><strong>⚠ Не подтверждено сотрудником</strong></p>` : ""}
+      <p><strong>Статус:</strong><br>${ADMIN_STATUS_LABELS[visit.status] || visit.status}</p>
+      ${visit.auto_closed ? `<p><strong>⚠ Не подтверждено сотрудником</strong></p>` : ""}
     `;
 
     container.appendChild(card);
