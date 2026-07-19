@@ -810,10 +810,10 @@ async function initStaffBooking(client){
   if(staffBookingServicesCache.length === 0){
     const {data} = await supabaseClient
       .from("services")
-      .select("id, name, duration_minutes, price")
+      .select("id, name, duration_minutes, price, service_type")
       .eq("is_active", true)
       .order("name");
-    staffBookingServicesCache = data || [];
+    staffBookingServicesCache = (data || []).filter(s => s.service_type !== "additional");
   }
 
   const select = document.getElementById("staffBookingService");

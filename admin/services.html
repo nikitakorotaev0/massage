@@ -52,6 +52,23 @@
 <label style="margin-top:10px;">Цена (₽)</label>
 <input type="number" id="newServicePrice" placeholder="2500">
 
+<label style="margin-top:10px;">Тип услуги</label>
+
+<label style="font-weight:normal;">
+<input type="radio" name="newServiceType" value="primary">
+Основная (можно выбрать только первой)
+</label>
+
+<label style="font-weight:normal;">
+<input type="radio" name="newServiceType" value="additional">
+Дополнительная (можно выбрать только как дополнение)
+</label>
+
+<label style="font-weight:normal;">
+<input type="radio" name="newServiceType" value="mixed" checked>
+Смешанная (подходит и как основная, и как дополнительная)
+</label>
+
 </form>
 
 <button class="btn" type="button" id="createServiceBtn" style="margin-top:15px;">

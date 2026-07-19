@@ -55,6 +55,13 @@ async function loadServicesList(){
 }
 
 
+const SERVICE_TYPE_LABELS = {
+  primary: "Основная",
+  additional: "Дополнительная",
+  mixed: "Смешанная"
+};
+
+
 function renderServiceCard(service){
 
   const card = document.createElement("div");
@@ -66,6 +73,7 @@ function renderServiceCard(service){
     <p>${service.description || ""}</p>
     <p><strong>Продолжительность:</strong><br>${service.duration_minutes} минут</p>
     <p><strong>Цена:</strong><br>${service.price} ₽</p>
+    <p><strong>Тип:</strong><br>${SERVICE_TYPE_LABELS[service.service_type] || "Смешанная"}</p>
     <p><strong>Статус:</strong><br>${service.is_active ? "Активна" : "Не активна"}</p>
   `;
 
@@ -97,6 +105,29 @@ function renderServiceCard(service){
 }
 
 
+function serviceTypeRadios(namePrefix, currentType){
+
+  const type = currentType || "mixed";
+
+  return `
+    <label style="font-weight:normal;">
+    <input type="radio" name="${namePrefix}" value="primary" ${type === "primary" ? "checked" : ""}>
+    Основная (можно выбрать только первой)
+    </label>
+
+    <label style="font-weight:normal;">
+    <input type="radio" name="${namePrefix}" value="additional" ${type === "additional" ? "checked" : ""}>
+    Дополнительная (можно выбрать только как дополнение)
+    </label>
+
+    <label style="font-weight:normal;">
+    <input type="radio" name="${namePrefix}" value="mixed" ${type === "mixed" ? "checked" : ""}>
+    Смешанная (подходит и как основная, и как дополнительная)
+    </label>
+  `;
+}
+
+
 function toggleEditForm(service){
 
   const box = document.getElementById(`service-edit-${service.id}`);
@@ -121,6 +152,11 @@ function toggleEditForm(service){
 
       <label style="margin-top:10px;">Цена (₽)</label>
       <input type="number" id="edit-price-${service.id}" value="${service.price}">
+
+      <label style="margin-top:10px;">Тип услуги</label>
+      <div id="edit-type-${service.id}">
+      ${serviceTypeRadios(`edit-type-radio-${service.id}`, service.service_type)}
+      </div>
     </form>
 
     <button class="btn" type="button" id="edit-save-${service.id}" style="margin-top:15px;">
@@ -139,6 +175,9 @@ async function saveServiceEdit(serviceId){
   const duration = parseInt(document.getElementById(`edit-duration-${serviceId}`).value, 10);
   const price = parseFloat(document.getElementById(`edit-price-${serviceId}`).value);
 
+  const typeInput = document.querySelector(`input[name="edit-type-radio-${serviceId}"]:checked`);
+  const serviceType = typeInput ? typeInput.value : "mixed";
+
   if(!name || !duration || !price){
     showToast("Заполните название, продолжительность и цену", "error");
     return;
@@ -150,7 +189,8 @@ async function saveServiceEdit(serviceId){
       name: name,
       description: description || null,
       duration_minutes: duration,
-      price: price
+      price: price,
+      service_type: serviceType
     })
     .eq("id", serviceId);
 
@@ -188,6 +228,9 @@ async function createService(){
   const duration = parseInt(document.getElementById("newServiceDuration").value, 10);
   const price = parseFloat(document.getElementById("newServicePrice").value);
 
+  const typeInput = document.querySelector('input[name="newServiceType"]:checked');
+  const serviceType = typeInput ? typeInput.value : "mixed";
+
   if(!name || !duration || !price){
     showToast("Заполните название, продолжительность и цену", "error");
     return;
@@ -204,6 +247,7 @@ async function createService(){
       description: description || null,
       duration_minutes: duration,
       price: price,
+      service_type: serviceType,
       is_active: true
     });
 
@@ -221,6 +265,7 @@ async function createService(){
   document.getElementById("newServiceDesc").value = "";
   document.getElementById("newServiceDuration").value = "";
   document.getElementById("newServicePrice").value = "";
+  document.querySelector('input[name="newServiceType"][value="mixed"]').checked = true;
 
   await loadServicesList();
 }

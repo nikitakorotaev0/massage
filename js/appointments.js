@@ -163,11 +163,6 @@ async function initNearestAppointmentWidget(){
       ${formatTimeShort(visit.start_time)}
       — ${servicesText}${masterText}
     </p>
-
-    <a class="btn" href="appointments.html">
-    Подробнее
-
-    </a>
   `;
 }
 

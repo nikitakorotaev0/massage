@@ -49,11 +49,14 @@ function todayDateString(){
 // ---------- Сообщения на странице ----------
 
 function showMessage(text, isError){
-  const box = document.getElementById("bookingMessage");
+  const box = document.getElementById("bookingAlert");
   if(!box) return;
   box.textContent = text;
   box.style.display = text ? "block" : "none";
-  box.style.color = isError ? "#b02a2a" : "#173f35";
+  box.className = "booking-alert " + (isError ? "booking-alert-error" : "booking-alert-success");
+  if(text && isError){
+    box.scrollIntoView({behavior: "smooth", block: "center"});
+  }
 }
 
 function showMasterInfo(text){
@@ -98,6 +101,7 @@ async function initBooking(){
 
 
 function onServiceSelectionChanged(){
+  rebuildServiceOptions();
   clearAppliedPromo();
   refreshSlots();
 }
@@ -107,17 +111,18 @@ function onServiceSelectionChanged(){
 
 let additionalServiceRowCounter = 0;
 
+function getAllServiceSelects(){
+  return [
+    document.getElementById("serviceSelect"),
+    ...document.querySelectorAll(".additional-service-select")
+  ];
+}
+
 function getSelectedServices(){
 
   const services = [];
 
-  const firstId = document.getElementById("serviceSelect").value;
-  const firstService = servicesCache.find(s => String(s.id) === String(firstId));
-  if(firstService){
-    services.push(firstService);
-  }
-
-  document.querySelectorAll(".additional-service-select").forEach(select => {
+  getAllServiceSelects().forEach(select => {
     const service = servicesCache.find(s => String(s.id) === String(select.value));
     if(service){
       services.push(service);
@@ -125,6 +130,47 @@ function getSelectedServices(){
   });
 
   return services;
+}
+
+
+// Перестраивает варианты во всех select'ах услуг: первая услуга —
+// только "основная" или "смешанная"; дополнительные — только
+// "дополнительная" или "смешанная". Также убирает из списков услуги,
+// уже выбранные в других select'ах, чтобы нельзя было выбрать
+// одну и ту же услугу дважды.
+function rebuildServiceOptions(){
+
+  const selects = getAllServiceSelects();
+  const currentValues = selects.map(s => s.value);
+
+  selects.forEach((select, index) => {
+
+    const isFirst = index === 0;
+    const pool = servicesCache.filter(s => isFirst ? (s.service_type !== "additional") : (s.service_type !== "primary"));
+
+    const ownValue = currentValues[index];
+    const otherValues = currentValues.filter((v, i) => i !== index);
+
+    const available = pool.filter(s => String(s.id) === String(ownValue) || !otherValues.includes(String(s.id)));
+
+    select.innerHTML = "";
+
+    if(available.length === 0){
+      select.innerHTML = `<option value="">Нет доступных услуг</option>`;
+      return;
+    }
+
+    available.forEach(service => {
+      const option = document.createElement("option");
+      option.value = service.id;
+      option.textContent = `${service.name} — ${service.duration_minutes} мин, ${service.price} ₽`;
+      select.appendChild(option);
+    });
+
+    if(available.some(s => String(s.id) === String(ownValue))){
+      select.value = ownValue;
+    }
+  });
 }
 
 
@@ -143,13 +189,6 @@ function addServiceRow(){
   const select = document.createElement("select");
   select.className = "additional-service-select";
   select.style.flex = "1";
-
-  servicesCache.forEach(service => {
-    const option = document.createElement("option");
-    option.value = service.id;
-    option.textContent = `${service.name} — ${service.duration_minutes} мин, ${service.price} ₽`;
-    select.appendChild(option);
-  });
 
   select.addEventListener("change", onServiceSelectionChanged);
 
@@ -183,7 +222,7 @@ async function loadServices(){
 
   const {data, error} = await supabaseClient
     .from("services")
-    .select("id, name, description, duration_minutes, price")
+    .select("id, name, description, duration_minutes, price, service_type")
     .eq("is_active", true)
     .order("name");
 
@@ -194,20 +233,12 @@ async function loadServices(){
 
   servicesCache = data || [];
 
-  const select = document.getElementById("serviceSelect");
-  select.innerHTML = "";
-
   if(servicesCache.length === 0){
-    select.innerHTML = `<option value="">Нет доступных услуг</option>`;
+    document.getElementById("serviceSelect").innerHTML = `<option value="">Нет доступных услуг</option>`;
     return;
   }
 
-  servicesCache.forEach(service => {
-    const option = document.createElement("option");
-    option.value = service.id;
-    option.textContent = `${service.name} — ${service.duration_minutes} мин, ${service.price} ₽`;
-    select.appendChild(option);
-  });
+  rebuildServiceOptions();
 }
 
 
@@ -409,6 +440,11 @@ async function refreshSlots(){
 
 async function submitBooking(){
 
+  if(!document.getElementById("consentCheckbox").checked){
+    showMessage("Чтобы записаться, подтвердите согласие на оказание услуг", true);
+    return;
+  }
+
   const serviceId = document.getElementById("serviceSelect").value;
   const date = document.getElementById("dateInput").value;
 
@@ -425,7 +461,10 @@ async function submitBooking(){
   }
 
   if(!assignedEmployeeId){
-    showMessage("На эту дату мастер не назначен", true);
+    // Перепроверяем и показываем актуальную причину (выходной,
+    // нерабочий день недели, мастер не назначен и т.д.),
+    // а не общий текст, который может ввести в заблуждение.
+    await refreshSlots();
     return;
   }
 

@@ -772,3 +772,44 @@ form label {
   background: #173f35;
 
 }
+
+
+/* Заметное предупреждение вверху формы записи */
+
+.booking-alert {
+
+  margin-bottom: 20px;
+
+  padding: 16px 20px;
+
+  border-radius: 10px;
+
+  font-weight: 600;
+
+  font-size: 16px;
+
+}
+
+
+
+.booking-alert-error {
+
+  background: #fdecea;
+
+  border: 2px solid #b02a2a;
+
+  color: #7a1f1f;
+
+}
+
+
+
+.booking-alert-success {
+
+  background: #e6f4ea;
+
+  border: 2px solid #2f7d4f;
+
+  color: #1e5c37;
+
+}
