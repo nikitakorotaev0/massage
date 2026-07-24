@@ -82,6 +82,12 @@ async function initBooking(){
   dateInput.min = todayDateString();
   dateInput.value = todayDateString();
 
+  renderQuickDateChips();
+  dateInput.addEventListener("change", () => {
+    updateQuickDateChipsActiveState();
+    refreshSlots();
+  });
+
   document.getElementById("personSelf").addEventListener("change", toggleOtherPersonFields);
   document.getElementById("personOther").addEventListener("change", toggleOtherPersonFields);
   toggleOtherPersonFields();
@@ -89,7 +95,6 @@ async function initBooking(){
   await loadServices();
 
   document.getElementById("serviceSelect").addEventListener("change", onServiceSelectionChanged);
-  dateInput.addEventListener("change", refreshSlots);
 
   document.getElementById("addServiceBtn").addEventListener("click", addServiceRow);
 
@@ -97,6 +102,56 @@ async function initBooking(){
   document.getElementById("submitBookingBtn").addEventListener("click", submitBooking);
 
   await refreshSlots();
+}
+
+
+function renderQuickDateChips(){
+
+  const container = document.getElementById("quickDateChips");
+  if(!container) return;
+
+  const options = [
+    {label: "Сегодня", offset: 0},
+    {label: "Завтра", offset: 1},
+    {label: "Послезавтра", offset: 2}
+  ];
+
+  container.innerHTML = "";
+
+  options.forEach(opt => {
+    const d = new Date();
+    d.setDate(d.getDate() + opt.offset);
+    const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "quick-date-chip";
+    chip.dataset.date = dateStr;
+    chip.textContent = opt.label;
+
+    chip.addEventListener("click", () => {
+      document.getElementById("dateInput").value = dateStr;
+      updateQuickDateChipsActiveState();
+      refreshSlots();
+    });
+
+    container.appendChild(chip);
+  });
+
+  updateQuickDateChipsActiveState();
+}
+
+
+function updateQuickDateChipsActiveState(){
+
+  const container = document.getElementById("quickDateChips");
+  if(!container) return;
+
+  const currentValue = document.getElementById("dateInput").value;
+
+  container.querySelectorAll(".quick-date-chip").forEach(chip => {
+    chip.classList.toggle("quick-date-chip-active", chip.dataset.date === currentValue);
+  });
 }
 
 
@@ -185,6 +240,7 @@ function addServiceRow(){
   row.style.gap = "10px";
   row.style.marginTop = "10px";
   row.style.alignItems = "center";
+  row.classList.add("service-row-enter");
 
   const select = document.createElement("select");
   select.className = "additional-service-select";
@@ -197,8 +253,11 @@ function addServiceRow(){
   removeBtn.className = "btn btn-danger";
   removeBtn.textContent = "✕";
   removeBtn.addEventListener("click", () => {
-    row.remove();
-    onServiceSelectionChanged();
+    row.classList.add("service-row-leave");
+    setTimeout(() => {
+      row.remove();
+      onServiceSelectionChanged();
+    }, 180);
   });
 
   row.appendChild(select);

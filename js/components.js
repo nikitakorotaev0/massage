@@ -338,3 +338,21 @@ async function updateFooterContacts(){
     hoursEl.textContent = `${formatWorkDays(settings.work_days)}: ${settings.work_start.slice(0,5)}–${settings.work_end.slice(0,5)}`;
   }
 }
+
+
+// Лёгкая тень у шапки при прокрутке — ощущение "нативности" интерфейса
+(function(){
+  const headerEl = document.querySelector(".header");
+  if(!headerEl) return;
+
+  function updateHeaderShadow(){
+    if(window.scrollY > 6){
+      headerEl.classList.add("is-scrolled");
+    }else{
+      headerEl.classList.remove("is-scrolled");
+    }
+  }
+
+  window.addEventListener("scroll", updateHeaderShadow, {passive: true});
+  updateHeaderShadow();
+})();
